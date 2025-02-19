@@ -8,7 +8,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Members, Chamas, Contributions, Loans
 from django.db.models import Sum
-import pyrebase
+# import pyrebase
+import pyrebase4 as pyrebase
 
 # Create your views here.
 config = {
