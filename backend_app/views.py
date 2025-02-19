@@ -41,15 +41,21 @@ def index(request):
 
 #start of get members api
 @api_view(['GET','POST','DELETE'])
-def members(request, password):
+def members(request, email, password):
     if request.method == 'GET':
-        check_password = Members.objects.filter(password=password).values()
-        if check_password:
-            members = Members.objects.all()
-            serializer = MembersSerializer(members, many=True)
-            return Response(serializer.data)
-        else:
-            return Response({"message":"Access denied"})
+        # check_password = Members.objects.filter(password=password).values()
+        try:
+            user = authe.sign_in_with_email_and_password(email,password)
+            if user:
+                members = Members.objects.all()
+                serializer = MembersSerializer(members, many=True)
+                return Response(serializer.data)
+            else:
+                return Response({"message":"Please signin"})
+        except:
+            return Response({"message":"Invalid password"})
+    else:
+        return Response({"message":"Invalid access"})
 #end of get members api  
 
 #start of contributions api
