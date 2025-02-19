@@ -89,7 +89,7 @@ DATABASES = {
     }
 }
 
-# database_url = 'postgresql://chamadatabase_user:aJZ5ctgH8E03QVk5X0JMGhlMiBFpD9ay@dpg-cun3a7ggph6c738ca3c0-a.oregon-postgres.render.com/chamadatabase'
+# database_url = 'postgresql://  chamadatabase_user:aJZ5ctgH8E03QVk5X0JMGhlMiBFpD9ay@dpg-cun3a7ggph6c738ca3c0-a.oregon-postgres.render.com/chamadatabase'
 # DATABASES['default'] = dj_database_url.parse(database_url)
 
 

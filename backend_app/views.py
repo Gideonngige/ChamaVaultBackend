@@ -8,8 +8,24 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Members, Chamas, Contributions, Loans
 from django.db.models import Sum
+import pyrebase
 
 # Create your views here.
+config = {
+    "apiKey": "AIzaSyBYX6dcWok3ldsw4gFXHEjyKbVs6tONxKc",
+    "authDomain": "chamavault-d1d35.firebaseapp.com",
+    "databaseURL": "https://chamavault-d1d35-default-rtdb.firebaseio.com/",
+    "projectId": "chamavault-d1d35",
+    "storageBucket": "chamavault-d1d35.firebasestorage.app",
+    "messagingSenderId": "739112708717",
+    "appId": "1:739112708717:web:481c8338f8b5fdfb192d64",
+    "measurementId": "G-47P7H86QBS"
+}
+firebase = pyrebase.initialize_app(config)
+authe = firebase.auth() 
+database = firebase.database()
+
+
 def index(request):
     now = datetime.now()
     html = f''' 
@@ -22,18 +38,6 @@ def index(request):
     '''
     return HttpResponse(html)
 
-#start of login api
-@api_view(['GET'])
-def login(request, email, password):
-    if request.method == 'GET':
-        check_details = Members.objects.filter(email=email, password=password).values()
-        if check_details:
-            return Response({"message":"Login successful"})
-        else:
-            return Response({"message":"Invalid credentials"})
-
-#end of login api
-
 #start of get members api
 @api_view(['GET','POST','DELETE'])
 def members(request, password):
@@ -45,23 +49,7 @@ def members(request, password):
             return Response(serializer.data)
         else:
             return Response({"message":"Access denied"})
-#end of get members api
-        
-#start of register api
-@api_view(['GET'])   
-def register(request, chama_id, name, email, phone_number, password):
-    if request.method == 'GET':
-        check_member = Members.objects.filter(email=email).values()
-        if check_member:
-            return Response({"message":"Email already exists"})
-        else:
-            chama = Chamas.objects.get(pk=chama_id)
-            member = Members(chama=chama,name=name, email=email, phone_number=phone_number, password=password)
-            member.save()
-            return JsonResponse({"message":"Successfully registered"})
-    else:
-        return JsonResponse({"message":"Invalid access"})
-#end of register api   
+#end of get members api  
 
 #start of contributions api
 @api_view(['GET']) 
@@ -95,6 +83,7 @@ def check_loan(email):
     elif total_amount == 0:
         loan = 10000
         return max_amount
+#end of calculate function
 
 @api_view(['GET'])
 def loans(request, email, amount, loan_type):
@@ -111,10 +100,67 @@ def loans(request, email, amount, loan_type):
         
     except Members.DoesNotExist:
         return Response({"message":"Invalid email address"})
-
-#end of loans api\
+#end of loans api
 
 @api_view(['GET'])
 def loan_allowed(request, email):
     max_loan = check_loan(email)
     return Response({"max_loan":f"Ksh.{max_loan}"})
+
+#start of signin api
+def postsignIn(request, email, password):
+    try:
+        user = authe.sign_in_with_email_and_password(email,password)
+    except:
+        message = "Invalid Credentials!! Please Check your data"
+        return JsonResponse({"message": message})
+    session_id = user['idToken']
+    request.session['uid'] = str(session_id)
+    return JsonResponse({"message": "Successfully logged in"})
+#end of signin api
+
+#start of logout api
+def logout(request):
+    try:
+        del request.session['uid']
+    except:
+        pass 
+    return JsonResponse({"message": "Successfully logged out"})
+#end of logout api
+
+#start of signUp api
+def postsignUp(request,  chama, name, email, phone_number, password):
+    try:
+        
+        if request.method == 'GET':
+            check_member = Members.objects.filter(email=email).values()
+            if check_member:
+                return JsonResponse({"message":"Email already exists"})
+            else:
+                user = authe.create_user_with_email_and_password(email, password)
+                uid = user['localId']
+                idtoken = request.session['uid']
+                print(uid)
+                chama = Chamas.objects.get(name=chama)
+                member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=uid)
+                member.save()
+                return JsonResponse({"message":"Successfully registered"})
+        else:
+            return JsonResponse({"failed":"Invalid request"})
+
+    except:
+        return JsonResponse({"failed":"Registration failed"})
+    return JsonResponse({"success":"Registration successful"})
+#end of signUp api
+
+#end of reset api
+def postReset(request, email):
+    try:
+        authe.send_password_reset_email(email)
+        message = "A email to reset password is successfully sent"
+        return JsonResponse({"message": message})
+    except:
+        message = "Something went wrong, Please check the email, provided is registered or not"
+        return JsonResponse({"message": message})
+#start of reset api
+
