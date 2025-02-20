@@ -146,6 +146,12 @@ def postsignUp(request):
             if check_member:
                 return JsonResponse({"message":"Email already exists"})
             else:
+                data = json.loads(request.body)  # Convert request body to JSON
+                chama = data.get("chama")  # Get Chama name
+                name = data.get("name")
+                email = data.get("email")
+                phone_number = data.get("phone_number")
+                password = data.get("password")
                 user = authe.create_user_with_email_and_password(email, password)
                 uid = user['localId']
                 idtoken = request.session['uid']
