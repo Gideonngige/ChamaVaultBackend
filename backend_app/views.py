@@ -141,7 +141,7 @@ def logout(request):
 def postsignUp(request,  chama, name, email, phone_number, password):
     try:
         
-        if request.method == 'POST':
+        if request.method == 'GET':
             check_member = Members.objects.filter(email=email).values()
             if check_member:
                 return JsonResponse({"message":"Email already exists"})
