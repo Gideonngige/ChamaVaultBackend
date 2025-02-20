@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from .models import Members, Chamas, Contributions, Loans
 from django.db.models import Sum
 import pyrebase
-from django.views.decorators.csrf import csrf_exempt
+# from django.views.decorators.csrf import csrf_exempt
 # import pyrebase4 as pyrebase
 
 # Create your views here.
@@ -137,7 +137,7 @@ def logout(request):
 #end of logout api
 
 #start of signUp api
-@csrf_exempt
+# @csrf_exempt
 def postsignUp(request,  chama, name, email, phone_number, password):
     try:
         
