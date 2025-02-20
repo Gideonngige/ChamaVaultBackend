@@ -141,7 +141,7 @@ def logout(request):
 def postsignUp(request,  chama, name, email, phone_number, password):
     try:
         
-        if request.method == 'POST':
+        # if request.method == 'POST':
             check_member = Members.objects.filter(email=email).values()
             if check_member:
                 return JsonResponse({"message":"Email already exists"})
@@ -154,8 +154,8 @@ def postsignUp(request,  chama, name, email, phone_number, password):
                 member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=uid)
                 member.save()
                 return JsonResponse({"message":"Successfully registered"})
-        else:
-            return JsonResponse({"message":"Invalid request"})
+        # else:
+        #     return JsonResponse({"message":"Invalid request"})
 
     except:
         return JsonResponse({"message":"Registration failed"})
