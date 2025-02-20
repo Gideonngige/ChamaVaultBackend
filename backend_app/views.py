@@ -9,7 +9,8 @@ from rest_framework.response import Response
 from .models import Members, Chamas, Contributions, Loans
 from django.db.models import Sum
 import pyrebase
-# from django.views.decorators.csrf import csrf_exempt
+import json
+from django.views.decorators.csrf import csrf_exempt
 # import pyrebase4 as pyrebase
 
 # Create your views here.
@@ -137,7 +138,7 @@ def logout(request):
 #end of logout api
 
 #start of signUp api
-# @csrf_exempt
+@csrf_exempt
 def postsignUp(request):
     try:
         
@@ -150,7 +151,7 @@ def postsignUp(request):
                 chama = data.get("chama")  # Get Chama name
                 name = data.get("name")
                 email = data.get("email")
-                phone_number = data.get("phone_number")
+                phone_number = data.get("phonenumber")
                 password = data.get("password")
                 user = authe.create_user_with_email_and_password(email, password)
                 uid = user['localId']
