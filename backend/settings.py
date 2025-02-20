@@ -60,14 +60,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
 ]
-REST_FRAMEWORK = {'DEFAULT_PERMISSION_CLASSES':['rest_framework.permission.AllowAny']}
 
 CORS_ALLOW_ALL_ORIGINS = True
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",  # If running React locally
-#     "http://localhost:8081" # Reactnative locally
-#     "http://192.168.1.100:3000",  # Your machine’s local IP
-# ]
+CORS_ORIGIN_WHITELIST = (
+'http://localhost:8081',
+'http://localhost:8000',
+)
+
 
 ROOT_URLCONF = 'backend.urls'
 
