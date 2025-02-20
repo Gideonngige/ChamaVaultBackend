@@ -62,11 +62,11 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",  # If running React locally
-#     "http://localhost:8081"
-#     "http://192.168.1.100:3000",  # Your machine’s local IP
-# ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # If running React locally
+    "http://localhost:8081" # Reactnative locally
+    "http://192.168.1.100:3000",  # Your machine’s local IP
+]
 
 ROOT_URLCONF = 'backend.urls'
 
