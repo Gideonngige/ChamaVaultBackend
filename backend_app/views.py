@@ -153,11 +153,11 @@ def postsignUp(request,  chama, name, email, phone_number, password):
                 member.save()
                 return JsonResponse({"message":"Successfully registered"})
         else:
-            return JsonResponse({"failed":"Invalid request"})
+            return JsonResponse({"message":"Invalid request"})
 
     except:
-        return JsonResponse({"failed":"Registration failed"})
-    return JsonResponse({"success":"Registration successful"})
+        return JsonResponse({"message":"Registration failed"})
+    return JsonResponse({"message":"Registration successful"})
 #end of signUp api
 
 #end of reset api
