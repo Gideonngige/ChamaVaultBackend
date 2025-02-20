@@ -9,6 +9,6 @@ urlpatterns = [
     path('loan_allowed/<str:email>/', views.loan_allowed, name='loan_allowed'),
     path('postsignIn/<str:email>/<str:password>/', views.postsignIn, name='postsignIn'),
     path('logout/', views.logout, name='logout'),
-    path('postsignUp/<str:chama>/<str:name>/<str:email>/<str:phone_number>/<str:password>/', views.postsignUp, name='postsignUp'),
+    path('postsignUp/', views.postsignUp, name='postsignUp'),
     path('postReset/<str:email>/', views.postReset, name='postReset'),
 ]

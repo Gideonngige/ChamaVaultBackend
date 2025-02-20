@@ -138,7 +138,7 @@ def logout(request):
 
 #start of signUp api
 # @csrf_exempt
-def postsignUp(request,  chama, name, email, phone_number, password):
+def postsignUp(request):
     try:
         
         if request.method == 'POST':
