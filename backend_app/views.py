@@ -142,33 +142,38 @@ def logout(request):
 @api_view(['POST'])
 def postsignUp(request):
     try:
+        data = json.loads(request.body)  # Convert request body to JSON
         
-        if request.method == 'POST':
-            data = json.loads(request.body)  # Convert request body to JSON
-            chama = data.get("chama")  # Get Chama name
-            name = data.get("name")
-            email = data.get("email")
-            phone_number = data.get("phone_number")
-            password = data.get("password")
-            
-            check_member = Members.objects.filter(email=email).values()
-            if check_member:
-                return JsonResponse({"message":"Email already exists"})
-            else:
-                user = authe.create_user_with_email_and_password(email, password)
-                uid = user['localId']
-                idtoken = request.session['uid']
-                print(uid)
-                chama = Chamas.objects.get(name=chama)
-                member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=uid)
-                member.save()
-                return JsonResponse({"message":"Successfully registered"})
-        else:
-            return JsonResponse({"message":"Invalid request"})
+        # Extract data
+        email = data.get("email")  # Define email first
+        chama_name = data.get("chama")
+        name = data.get("name")
+        phone_number = data.get("phone_number")
+        password = data.get("password")
 
-    except:
-        return JsonResponse({"message":"Registration failed"})
-    return JsonResponse({"message":"Registration successful"})
+        # Check if email already exists
+        if Members.objects.filter(email=email).exists():
+            return JsonResponse({"message": "Email already exists"}, status=400)
+
+        # Create user
+        user = authe.create_user_with_email_and_password(email, password)
+        uid = user['localId']
+        
+        # Check if chama exists
+        try:
+            chama = Chamas.objects.get(name=chama_name)
+        except Chamas.DoesNotExist:
+            return JsonResponse({"message": "Chama not found"}, status=400)
+
+        # Save member
+        member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=uid)
+        member.save()
+
+        return JsonResponse({"message": "Successfully registered"}, status=201)
+
+    except Exception as e:
+        print("Error:", str(e))  # Log error for debugging
+        return JsonResponse({"message": "Registration failed", "error": str(e)}, status=500)
 #end of signUp api
 
 #end of reset api
