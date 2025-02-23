@@ -138,53 +138,36 @@ def logout(request):
 #end of logout api
 
 #start of signUp api
-@csrf_exempt  # Temporarily disable CSRF (for API testing)
+@csrf_exempt
+@api_view(['POST'])
 def postsignUp(request):
     try:
-        if request.method != 'POST':
-            return JsonResponse({"message": "Invalid request"}, status=400)
+        
+        if request.method == 'POST':
+            check_member = Members.objects.filter(email=email).values()
+            if check_member:
+                return JsonResponse({"message":"Email already exists"})
+            else:
+                data = json.loads(request.body)  # Convert request body to JSON
+                chama = data.get("chama")  # Get Chama name
+                name = data.get("name")
+                email = data.get("email")
+                phone_number = data.get("phone_number")
+                password = data.get("password")
+                user = authe.create_user_with_email_and_password(email, password)
+                uid = user['localId']
+                idtoken = request.session['uid']
+                print(uid)
+                chama = Chamas.objects.get(name=chama)
+                member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=uid)
+                member.save()
+                return JsonResponse({"message":"Successfully registered"})
+        else:
+            return JsonResponse({"message":"Invalid request"})
 
-        # ✅ Extract JSON data from request body
-        try:
-            data = json.loads(request.body)  # Convert request body to JSON
-            chama_name = data.get("chama")  # Get Chama name
-            name = data.get("name")
-            email = data.get("email")
-            phone_number = data.get("phone_number")
-            password = data.get("password")
-
-            if not all([chama_name, name, email, phone_number, password]):
-                return JsonResponse({"message": "Missing required fields"}, status=400)
-
-        except json.JSONDecodeError:
-            return JsonResponse({"message": "Invalid JSON format"}, status=400)
-
-        # ✅ Check if email already exists
-        if Members.objects.filter(email=email).exists():
-            return JsonResponse({"message": "Email already exists"}, status=400)
-
-        # ✅ Firebase authentication
-        try:
-            user = authe.create_user_with_email_and_password(email, password)
-            uid = user["localId"]
-        except Exception as e:
-            return JsonResponse({"message": f"Firebase error: {str(e)}"}, status=500)
-
-        # ✅ Get Chama object
-        try:
-            chama = Chamas.objects.get(name=chama_name)
-        except Chamas.DoesNotExist:
-            return JsonResponse({"message": "Chama not found"}, status=404)
-
-        # ✅ Save Member in Database
-        member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=uid)
-        member.save()
-
-        return JsonResponse({"message": "Successfully registered"}, status=201)
-
-    except Exception as e:
-        print(f"Error: {str(e)}")  # Log error for debugging
-        return JsonResponse({"message": f"Registration failed: {str(e)}"}, status=500)
+    except:
+        return JsonResponse({"message":"Registration failed"})
+    return JsonResponse({"message":"Registration successful"})
 #end of signUp api
 
 #end of reset api
