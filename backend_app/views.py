@@ -188,6 +188,7 @@ def postReset(request, email):
 #start of reset api
 
 #start of create chama api
+@csrf_exempt
 @api_view(['POST'])
 def createchama(request):
     try:
