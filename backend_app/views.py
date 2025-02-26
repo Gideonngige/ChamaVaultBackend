@@ -196,7 +196,7 @@ def createchama(request):
         chama = data.get('chama')
         description = data.get('description')
         created_by = data.get('created_by')
-        if Chamas.objects.filter(name=name).exists():
+        if Chamas.objects.filter(name=chama).exists():
             return JsonResponse({"message": "Chama already exists"}, status=400)
         else:
             amount = 0
