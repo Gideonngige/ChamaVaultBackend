@@ -11,5 +11,5 @@ urlpatterns = [
     path('logout/', views.logout, name='logout'),
     path('postsignUp/', views.postsignUp, name='postsignUp'),
     path('postReset/<str:email>/', views.postReset, name='postReset'),
-    path('createchama/<str:name>/<str:description>/', views.create_chama, name='create_chama'),
+    path('createchama/<str:name>/<str:description>/', views.createchama, name='createchama'),
 ]

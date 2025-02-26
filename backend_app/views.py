@@ -189,7 +189,7 @@ def postReset(request, email):
 
 #start of create chama api
 @api_view(['GET'])
-def create_chama(request, name, description):
+def createchama(request, name, description):
     try:
         if Chamas.objects.filter(name=name).exists():
             return JsonResponse({"message": "Chama already exists"}, status=400)
