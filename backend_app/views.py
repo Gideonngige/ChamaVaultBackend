@@ -188,7 +188,7 @@ def postReset(request, email):
 #start of reset api
 
 #start of create chama api
-@api_view(['GET'])
+@api_view(['POST'])
 def createchama(request, name, description):
     try:
         if Chamas.objects.filter(name=name).exists():
