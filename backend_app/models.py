@@ -14,6 +14,10 @@ class Chamas(models.Model):
     chama_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=200)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    created_by = models.CharField(max_length=200, default="chamavault")
+    description = models.TextField(max_length=500, default="This chama was created by chamavault")
+    created_date = models.DateTimeField(default=now)
+
 
     def __str__(self):
         return self.name

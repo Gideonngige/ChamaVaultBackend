@@ -187,3 +187,19 @@ def postReset(request, email):
         return JsonResponse({"message": message})
 #start of reset api
 
+#start of create chama api
+@api_view(['GET'])
+def create_chama(request, name, description):
+    try:
+        if Chamas.objects.filter(name=name).exists():
+            return JsonResponse({"message": "Chama already exists"}, status=400)
+        else:
+            amount = 0
+            created_by = "chamavault user"
+            chama = Chamas(name=name, amount=amount, created_by=created_by, description=description)
+            chama.save()
+            return JsonResponse({"message": "Chama created successfully"}, status=201)
+    except:
+        return JsonResponse({"message": "Chama creation failed"}, status=500)
+#end of create chama api
+

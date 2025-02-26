@@ -102,6 +102,17 @@ DATABASES = {
 # database_url = 'postgresql://  chamadatabase_user:aJZ5ctgH8E03QVk5X0JMGhlMiBFpD9ay@dpg-cun3a7ggph6c738ca3c0-a.oregon-postgres.render.com/chamadatabase'
 # DATABASES['default'] = dj_database_url.parse(database_url)
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'chamadatabase',  # Ensure this is correct
+#         'USER': 'chamadatabase_user',  # Remove extra spaces if any
+#         'PASSWORD': 'aJZ5ctgH8E03QVk5X0JMGhlMiBFpD9ay',  # Ensure it's correct
+#         'HOST': 'dpg-cun3a7ggph6c738ca3c0-a.oregon-postgres.render.com',
+#         'PORT': '5432',
+#     }
+# }
+
 
 database_url = os.environ.get('DATABASE_URL')
 DATABASES['default'] = dj_database_url.parse(database_url)
