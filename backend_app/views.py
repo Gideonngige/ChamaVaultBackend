@@ -200,7 +200,7 @@ def createchama(request):
             return JsonResponse({"message": "Chama already exists"}, status=400)
         else:
             amount = 0
-            chama = Chamas(name=name, amount=amount, created_by=created_by, description=description)
+            chama = Chamas(name=chama, amount=amount, created_by=created_by, description=description)
             chama.save()
             return JsonResponse({"message": "Chama created successfully"}, status=201)
     except:
