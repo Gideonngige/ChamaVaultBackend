@@ -189,7 +189,7 @@ def postReset(request, email):
 
 #start of create chama api
 @api_view(['POST'])
-def createchama(request, name, description):
+def createchama(request):
     try:
         data = json.loads(request.body)
         chama = data.get('chama')
