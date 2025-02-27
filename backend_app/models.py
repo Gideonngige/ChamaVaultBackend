@@ -38,6 +38,8 @@ class Contributions(models.Model):
     contribution_id = models.AutoField(primary_key=True)
     member = models.ForeignKey(Members, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
+    penality = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     contribution_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -45,24 +47,54 @@ class Contributions(models.Model):
 
 class Loans(models.Model):
     loan_id = models.AutoField(primary_key=True)
-    member = models.ForeignKey(Members, on_delete=models.CASCADE)
+    name = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='loanee_name', default=5)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     LOAN_TYPES = [
-        ('personal', 'Personal Loan'),
-        ('business', 'Business Loan'),
-        ('emergency', 'Emergency Loan'),
+        ('LTL', 'Long Term Loan'),
+        ('STL', 'Short Term Loan'),
     ]
     LOAN_STATUS = [
         ('paid','paid'),
         ('pending','pending'),
     ]
-    loan_type = models.CharField(max_length=20, choices=LOAN_TYPES, default='personal')
+    loan_type = models.CharField(max_length=20, choices=LOAN_TYPES, default='LTL')
     loan_status = models.CharField(max_length=20, choices=LOAN_STATUS, default='pending')
+    approved_by = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='approved_by', default=4)
     loan_date = models.DateTimeField(auto_now_add=True)
     loan_deadline = models.DateTimeField(validators=[validate_date])
 
     def __str__(self):
-        return f"{self.member.name} - {self.loan_type} - {self.amount}"
+        return f"{self.name} - {self.loan_type} - {self.amount}"
+
+class LoanRepayment(models.Model):
+    repayment_id = models.AutoField(primary_key=True)
+    loan_id = models.ForeignKey(Loans, on_delete=models.CASCADE)
+    name = models.ForeignKey(Members, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    penality = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    payment_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.amount}"
+
+class Transactions(models.Model):
+    transaction_id = models.AutoField(primary_key=True)
+    member = models.ForeignKey(Members, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE)
+    TRANSACTION_TYPE = [
+        ('Contribution','Contribution'),
+        ('Loan repayment','Loan repayment'),
+        ('Loan','Loan'),
+        ('Expense','Expense'),
+        ('Other','Other'),
+    ]
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE, default='Other')
+    transaction_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.member} - {self.amount}"
 
 class Notifications(models.Model):
     notification_id = models.AutoField(primary_key=True)

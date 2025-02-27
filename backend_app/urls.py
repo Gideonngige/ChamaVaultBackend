@@ -12,4 +12,5 @@ urlpatterns = [
     path('postsignUp/', views.postsignUp, name='postsignUp'),
     path('postReset/<str:email>/', views.postReset, name='postReset'),
     path('createchama/', views.createchama, name='createchama'),
+    path('getMember/<str:email>/', views.getMember, name='getMember'),
 ]

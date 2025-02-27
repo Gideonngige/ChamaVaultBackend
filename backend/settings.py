@@ -23,16 +23,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 
 #'django-insecure-warma_a=ah#lg$($qcbr_$f_80ij@42e&ph^u-5bv$&u@5q&!l'
-SECRET_KEY = os.environ.get('SECRET_KEY')
-# SECRET_KEY = 'django-insecure-warma_a=ah#lg$($qcbr_$f_80ij@42e&ph^u-5bv$&u@5q&!l'
+# SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'django-insecure-warma_a=ah#lg$($qcbr_$f_80ij@42e&ph^u-5bv$&u@5q&!l'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG','False').lower() == 'True'
-# DEBUG = True
+# DEBUG = os.environ.get('DEBUG','False').lower() == 'True'
+DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS','').split(' ')
+# ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS','').split(' ')
 
-# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -102,20 +102,20 @@ DATABASES = {
 # database_url = 'postgresql://  chamadatabase_user:aJZ5ctgH8E03QVk5X0JMGhlMiBFpD9ay@dpg-cun3a7ggph6c738ca3c0-a.oregon-postgres.render.com/chamadatabase'
 # DATABASES['default'] = dj_database_url.parse(database_url)
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'chamadatabase',  # Ensure this is correct
-#         'USER': 'chamadatabase_user',  # Remove extra spaces if any
-#         'PASSWORD': 'aJZ5ctgH8E03QVk5X0JMGhlMiBFpD9ay',  # Ensure it's correct
-#         'HOST': 'dpg-cun3a7ggph6c738ca3c0-a.oregon-postgres.render.com',
-#         'PORT': '5432',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'chamadatabase',  # Ensure this is correct
+        'USER': 'chamadatabase_user',  # Remove extra spaces if any
+        'PASSWORD': 'aJZ5ctgH8E03QVk5X0JMGhlMiBFpD9ay',  # Ensure it's correct
+        'HOST': 'dpg-cun3a7ggph6c738ca3c0-a.oregon-postgres.render.com',
+        'PORT': '5432',
+    }
+}
 
 
-database_url = os.environ.get('DATABASE_URL')
-DATABASES['default'] = dj_database_url.parse(database_url)
+# database_url = os.environ.get('DATABASE_URL')
+# DATABASES['default'] = dj_database_url.parse(database_url)
 
 
 

@@ -60,6 +60,17 @@ def members(request, email, password):
         return Response({"message":"Invalid access"})
 #end of get members api  
 
+#get member api
+@api_view(['GET'])
+def getMember(request, email):
+    try:
+        member = Members.objects.get(email=email)
+        serializer = MembersSerializer(member)
+        return JsonResponse(serializer.data)
+    except Members.DoesNotExist:
+        return JsonResponse({"message":"Invalid email address"})
+#end of get member api
+
 #start of contributions api
 @api_view(['GET']) 
 def contributions(request, email, amount):
@@ -79,7 +90,7 @@ def contributions(request, email, amount):
 from decimal import Decimal
 def check_loan(email):
     member = Members.objects.get(email=email)
-    total_amount = Loans.objects.filter(member=member).aggregate(Sum('amount'))['amount__sum'] or 0
+    total_amount = Loans.objects.filter(name=member).aggregate(Sum('amount'))['amount__sum'] or 0
     loan = 0
     max_amount = 10000
     if total_amount > max_amount:
@@ -98,10 +109,11 @@ def check_loan(email):
 def loans(request, email, amount, loan_type):
     try:
         member = Members.objects.get(email=email)
+        print(member)
         loan_deadline=timezone.now() + timedelta(days=30)
         check = check_loan(email)
         if check > 0:
-            loan = Loans(member=member, amount=amount, loan_type=loan_type, loan_deadline=loan_deadline)
+            loan = Loans(name=member, amount=amount, loan_type=loan_type, loan_deadline=loan_deadline)
             loan.save()
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful"})
         else:
