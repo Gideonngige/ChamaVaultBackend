@@ -102,10 +102,10 @@ def contributions(request):
             account_reference = '174379'
             transaction_desc = 'Make contributions to Chamavault'
             callback_url = 'https://api.darajambili.com/express-payment'
-            response = cl.stk_push(phone_number, amount, account_reference,
+            r = cl.stk_push(phone_number, amount, account_reference,
             transaction_desc, callback_url)
             print(f"STK Push Response: {response}")
-            return JsonResponse(response.description, safe=False)
+            return JsonResponse(r.response_description, safe=False)
             # contribution = Contributions(member=member, amount=amount)
             # contribution.save()
             # return JsonResponse({"message":f"Contribution of Ksh.{amount} was successful"})
@@ -252,3 +252,15 @@ def createchama(request):
         return JsonResponse({"message": "Chama creation failed"}, status=500)
 #end of create chama api
 
+
+cl = MpesaClient()
+stk_push_callback_url = 'https://api.darajambili.com/express-payment'
+
+def stk_push_success(request):
+    phone_number = "0797655727"
+    amount = 1 
+    account_reference = '174379'
+    transaction_desc = 'Make contributions to Chamavault'
+    call_back_url = stk_push_callback_url
+    r = cl.stk_push(phone_number, amount, account_reference,transaction_desc, call_back_url)
+    return JsonResponse(r.response_description, safe=False)

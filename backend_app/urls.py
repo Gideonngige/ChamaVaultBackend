@@ -14,4 +14,5 @@ urlpatterns = [
     path('createchama/', views.createchama, name='createchama'),
     path('getMember/<str:email>/', views.getMember, name='getMember'),
     path('getChama/<str:email>/', views.getChama, name='getChama'),
+    path('stk_push_success/', views.stk_push_success, name='stk_push_success'),
 ]
