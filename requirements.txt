@@ -14,4 +14,4 @@ dj-database-url>=2.1.0
 djangorestframework>=3.15.1
 pyrebase4==4.8.0
 django-cors-headers==4.7.0 
-daraja-django==1.2.0
+daraja-django==1.0.0
