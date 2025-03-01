@@ -87,7 +87,7 @@ def getChama(request, email):
 @api_view(['POST']) 
 def contributions(request):
     try:
-        data = request.data
+        data = json.loads(request.body) 
         email = data.get('email')
         amount = data.get('amount')
         phonenumber = data.get('phonenumber')
