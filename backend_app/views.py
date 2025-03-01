@@ -101,7 +101,7 @@ def contributions(request):
             callback_url = 'https://api.darajambili.com/express-payment'
             response = cl.stk_push(phone_number, amount, account_reference,
             transaction_desc, callback_url)
-            return HttpResponse(response)
+            return JsonResponse(response)
             # contribution = Contributions(member=member, amount=amount)
             # contribution.save()
             # return JsonResponse({"message":f"Contribution of Ksh.{amount} was successful"})
