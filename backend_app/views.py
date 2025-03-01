@@ -101,7 +101,7 @@ def contributions(request):
             amount = amount
             account_reference = '174379'
             transaction_desc = 'Make contributions to Chamavault'
-            callback_url = 'https://api.darajambili.com/express-payment'
+            callback_url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
             response = cl.stk_push(phone_number, amount, account_reference,
             transaction_desc, callback_url)
             print(f"STK Push Response: {response}")
