@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer
+from .serializers import MembersSerializer, ChamasSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Members, Chamas, Contributions, Loans
@@ -11,6 +11,7 @@ from django.db.models import Sum
 import pyrebase
 import json
 from django.views.decorators.csrf import csrf_exempt
+from django_daraja.mpesa.core import MpesaClient
 # import pyrebase4 as pyrebase
 
 # Create your views here.
@@ -71,14 +72,42 @@ def getMember(request, email):
         return JsonResponse({"message":"Invalid email address"})
 #end of get member api
 
-#start of contributions api
-@api_view(['GET']) 
-def contributions(request, email, amount):
+#get chama api
+@api_view(['GET'])
+def getChama(request, email):
     try:
+        chama = Members.objects.get(email=email)
+        serializer = ChamasSerializer(chama)
+        return JsonResponse(serializer.data)
+    except Members.DoesNotExist:
+        return JsonResponse({"message":"Invalid chama name"})
+#end of get chama api
+
+#start of contributions api
+@api_view(['POST']) 
+def contributions(request):
+    try:
+        data = json.loads(request.body) 
+        email = data.get('email')
+        amount = data.get('amount')
+        phonenumber = data.get('phonenumber')
         member = Members.objects.get(email=email)
-        contribution = Contributions(member=member, amount=amount)
-        contribution.save()
-        return Response({"message":f"Contribution of Ksh.{amount} was successful"})
+        if member:
+            cl = MpesaClient()
+            phone_number = phonenumber
+            amount = amount
+            account_reference = '174379'
+            transaction_desc = 'Make contributions to Chamavault'
+            callback_url = 'https://api.darajambili.com/express-payment'
+            response = cl.stk_push(phone_number, amount, account_reference,
+            transaction_desc, callback_url)
+            return HttpResponse(response)
+            # contribution = Contributions(member=member, amount=amount)
+            # contribution.save()
+            # return JsonResponse({"message":f"Contribution of Ksh.{amount} was successful"})
+        else:
+            return JsonResponse({"message":"Please signin"})
+
     except Members.DoesNotExist:
         return Response({"message":"Invalid email address"})
 

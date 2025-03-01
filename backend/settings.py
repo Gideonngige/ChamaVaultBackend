@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'backend_app',
     'rest_framework',
+    'django_daraja',
     "corsheaders",
 ]
 
@@ -161,3 +162,35 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+#daraja api
+# The Mpesa environment to use
+# Possible values: sandbox, production
+MPESA_ENVIRONMENT = 'sandbox'
+# Credentials for the daraja app
+MPESA_CONSUMER_KEY = 'u0Rbl1ohXhKQYpG1tkrCmCkZU4Qb5WSe4nVnkoA4rJA4BCXS'
+MPESA_CONSUMER_SECRET = 'tMcp2DqQLeuuhC7a3JjIfsYEhiQI0fqk275OVWCAGtLhOCPhI0PQmbLyH6OoGGOd'
+#Shortcode to use for transactions. For sandbox use the Shortcode 1
+#provided on test credentials page
+MPESA_SHORTCODE = '1'
+# Shortcode to use for Lipa na MPESA Online (MPESA Express) transactions
+# This is only used on sandbox, do not set this variable in production
+# For sandbox use the Lipa na MPESA Online Shorcode provided on test
+#credentials page
+MPESA_EXPRESS_SHORTCODE = '174379'
+# Type of shortcode
+# Possible values:
+# - paybill (For Paybill)
+# - till_number (For Buy Goods Till Number)
+MPESA_SHORTCODE_TYPE = '174379'
+# Lipa na MPESA Online passkey
+# Sandbox passkey is available on test credentials page
+# Production passkey is sent via email once you go live
+MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
+# Username for initiator (to be used in B2C, B2B, AccountBalance and
+#TransactionStatusQuery Transactions)
+MPESA_INITIATOR_USERNAME = 'testapi'
+# Plaintext password for initiator (to be used in B2C, B2B, AccountBalance
+#and TransactionStatusQuery Transactions)
+MPESA_INITIATOR_SECURITY_CREDENTIAL = 'je5sHWMsbmESo36EBzeSVN3LvH2H2/aDU+meb07/dbL+TeTPndAB6iYqI71YXMavcvTh+rtLqO9ZeprxPhGR4rxfBJJbpVwsL5FGzuUmGRj+8nMSXBHsskqB9qBh1Vybjhthr0Mc61B9Tjx/DQP/v/Nk8BZyd9sxiL575ognIr6zp0AzHKcuHReYS2S8YifzFiOAY6rejLGX0DCh47r9Bl5iH2npcstJ0ABhBkToxA/uTY+wnv95Gxw2x4rQO4ZPXSuPiLQRHGgBW27A2umRNNRXHqf400XkBGfqtMSDa4adYrNDK+PAOZiR9Tk4jM1QScd7ZESYRKDnvPZD6vNISQ=='
