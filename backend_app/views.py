@@ -95,6 +95,7 @@ def contributions(request):
         member = Members.objects.get(email=email)
         print(f"STK Push Request: {phonenumber}, Amount: {amount}, Email: {email}")
         if member:
+            print(f"STK Push Request: {phonenumber}, Amount: {amount}, Email: {email}")
             cl = MpesaClient()
             phone_number = phonenumber
             amount = amount
