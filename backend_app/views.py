@@ -84,6 +84,7 @@ def getChama(request, email):
 #end of get chama api
 
 #start of contributions api
+@csrf_exempt
 @api_view(['POST']) 
 def contributions(request):
     try:
