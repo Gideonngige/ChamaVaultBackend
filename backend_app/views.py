@@ -12,6 +12,8 @@ import pyrebase
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django_daraja.mpesa.core import MpesaClient
+from django.core.mail import send_mail
+from django.conf import settings
 # import pyrebase4 as pyrebase
 
 # Create your views here.
@@ -84,14 +86,17 @@ def getChama(request, email):
 #end of get chama api
 
 #start of contributions api
-@csrf_exempt
-@api_view(['POST']) 
+# @csrf_exempt
+# @api_view(['POST']) 
 def contributions(request):
     try:
-        data = json.loads(request.body) 
-        email = data.get('email')
-        amount = data.get('amount')
-        phonenumber = data.get('phonenumber')
+        # data = json.loads(request.body) 
+        # email = data.get('email')
+        # amount = data.get('amount')
+        # phonenumber = data.get('phonenumber')
+        email = "gtechcompany01@gmail.com"
+        phonenumber = "0797655727"
+        amount = 1 
         member = Members.objects.get(email=email)
         print(f"STK Push Request: {phonenumber}, Amount: {amount}, Email: {email}")
         if member:
@@ -104,7 +109,7 @@ def contributions(request):
             callback_url = 'https://api.darajambili.com/express-payment'
             r = cl.stk_push(phone_number, amount, account_reference,
             transaction_desc, callback_url)
-            print(f"STK Push Response: {response}")
+            print(f"STK Push Response: {r.response_description}")
             return JsonResponse(r.response_description, safe=False)
             # contribution = Contributions(member=member, amount=amount)
             # contribution.save()
@@ -264,3 +269,16 @@ def stk_push_success(request):
     call_back_url = stk_push_callback_url
     r = cl.stk_push(phone_number, amount, account_reference,transaction_desc, call_back_url)
     return JsonResponse(r.response_description, safe=False)
+
+
+#start of send email api
+def sendEmail(request, email_to, applink):
+    subject = 'Invitation to ChamaVault'
+    r_email = email_to
+    message = f'Hi there, \n\n I would like to invite you to check out this amazing app :{applink}n\nCheers!'
+    email_from = settings.EMAIL_HOST_USER
+    recipient_list = [r_email]
+    send_mail( subject, message, email_from, recipient_list)
+    return JsonResponse({"message": "ok"})
+
+#end of send email api
