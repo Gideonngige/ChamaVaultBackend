@@ -194,7 +194,8 @@ def getContributions(request, chamaname, email):
         if member:
             chama_name = Chamas.objects.get(name=chamaname)
             total_contributions = Contributions.objects.filter(member=member, chama=chama_name).aggregate(total=Sum('amount'))['total']
-            return JsonResponse({"total_contributions": total_contributions, "interest":9.5}, safe=False)
+            penalty = Contributions.objects.filter(member=member, chama=chama_name).aggregate(Sum('penality'))['penality__sum'] or 0
+            return JsonResponse({"total_contributions": total_contributions, "interest":9.5, "penalty":penalty}, safe=False)
 
         else:
             return JsonResponse({"message":"No Contributions found"})
