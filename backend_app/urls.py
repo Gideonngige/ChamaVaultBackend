@@ -16,4 +16,8 @@ urlpatterns = [
     path('getChama/<str:email>/', views.getChama, name='getChama'),
     path('stk_push_success/', views.stk_push_success, name='stk_push_success'),
     path('sendEmail/<str:email_to>/<str:applink>/', views.sendEmail, name='sendEmail'),
+    path('test_view/', views.test_view, name='test_view'),
+    path('stk_push/<str:phone_number>/<int:amount>/', views.stk_push, name='stk_push'),
+    path('getLoans/<str:chamaname>/<str:email>/', views.getLoans, name='getLoans'),
+    path('getContributions/<str:chamaname>/<str:email>/', views.getContributions, name='getContributions'),
 ]

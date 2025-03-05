@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from datetime import datetime
+# from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer
+from .serializers import MembersSerializer, ChamasSerializer,LoansSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Members, Chamas, Contributions, Loans
@@ -14,6 +14,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django_daraja.mpesa.core import MpesaClient
 from django.core.mail import send_mail
 from django.conf import settings
+import requests
+from requests.auth import HTTPBasicAuth
+import datetime
+import base64
 # import pyrebase4 as pyrebase
 
 # Create your views here.
@@ -33,6 +37,7 @@ database = firebase.database()
 
 
 def index(request):
+    from datetime import datetime
     now = datetime.now()
     html = f''' 
     <html>
@@ -166,6 +171,38 @@ def loan_allowed(request, email):
     max_loan = check_loan(email)
     return Response({"max_loan":f"Ksh.{max_loan}"})
 
+#start of get loans api
+def getLoans(request, chamaname, email):
+    try:
+        member = Members.objects.get(email=email)
+        if member:
+            chama_name = Chamas.objects.get(name=chamaname)
+            total_loan = Loans.objects.filter(name=member,chama=chama_name).aggregate(total=Sum('amount'))['total']
+            return JsonResponse({"total_loan": total_loan, "interest":9.5}, safe=False)
+
+        else:
+            return JsonResponse({"message":"No loans found"})
+    except Members.DoesNotExist:
+        return JsonResponse({"message":"Invalid email address"})
+#end of getLoans api 
+
+#start of getSavings api
+def getContributions(request, chamaname, email):
+    try:
+        member = Members.objects.get(email=email)
+
+        if member:
+            chama_name = Chamas.objects.get(name=chamaname)
+            total_contributions = Contributions.objects.filter(member=member, chama=chama_name).aggregate(total=Sum('amount'))['total']
+            return JsonResponse({"total_contributions": total_contributions, "interest":9.5}, safe=False)
+
+        else:
+            return JsonResponse({"message":"No Contributions found"})
+    except Members.DoesNotExist:
+        return JsonResponse({"message":"Invalid email address"})
+#end of getSavings api 
+
+
 #start of signin api
 def postsignIn(request, email, password):
     try:
@@ -258,19 +295,6 @@ def createchama(request):
 #end of create chama api
 
 
-cl = MpesaClient()
-stk_push_callback_url = 'https://api.darajambili.com/express-payment'
-
-def stk_push_success(request):
-    phone_number = "0797655727"
-    amount = 1 
-    account_reference = '174379'
-    transaction_desc = 'Make contributions to Chamavault'
-    call_back_url = stk_push_callback_url
-    r = cl.stk_push(phone_number, amount, account_reference,transaction_desc, call_back_url)
-    return JsonResponse(r.response_description, safe=False)
-
-
 #start of send email api
 def sendEmail(request, email_to, applink):
     subject = 'Invitation to ChamaVault'
@@ -282,3 +306,53 @@ def sendEmail(request, email_to, applink):
     return JsonResponse({"message": "ok"})
 
 #end of send email api
+
+# start of mpesa api aprt
+def get_access_token():
+    url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+    consumer_key = "17tijAWZQBWLRIFFuJrDGBfl1zalwr00g6wEE20cGdeHvw7l"
+    consumer_secret = "iX29aYc7ujvLlXssKhvG2ilFzS7Bpoa5dU9SIGoPUDrdkLWwKQD1rUEOhW7BRQ3e"
+    response = requests.get(url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
+    return response.json().get("access_token")
+
+
+def generate_mpesa_password():
+    business_shortcode = "174379" 
+    passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"  
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    
+    # Generate password using base64 encoding
+    password = base64.b64encode(f"{business_shortcode}{passkey}{timestamp}".encode()).decode()
+    return password, timestamp
+
+def stk_push(request, phone_number, amount):
+    access_token = get_access_token()
+    password, timestamp = generate_mpesa_password()
+    url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    payload = {
+        "BusinessShortCode": "174379",
+        "Password": password,
+        "Timestamp": timestamp,
+        "TransactionType": "CustomerPayBillOnline",
+        "Amount": amount,
+        "PartyA": phone_number,
+        "PartyB": "174379",
+        "PhoneNumber": phone_number,
+        "CallBackURL": "https://backend1-1cc6.onrender.com/",
+        "AccountReference": "Chamavault",
+        "TransactionDesc": "Payment description"
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    # return HttpResponse(response)
+    res_data = response.json()
+
+    if res_data.get("ResponseCode") == "0":
+        checkout_request_id = res_data.get("CheckoutRequestID")
+
+        return JsonResponse({"message":"STK Push Sent"})
+    else:
+        return JsonResponse({"error":"STK Push Failed"}, status=400)
+
+
+#end of mpesa api part

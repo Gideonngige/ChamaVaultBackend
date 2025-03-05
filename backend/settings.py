@@ -178,8 +178,8 @@ EMAIL_HOST_PASSWORD = 'rrst fhrj pojn agkt'
 # Possible values: sandbox, production
 MPESA_ENVIRONMENT = 'sandbox'
 # Credentials for the daraja app
-MPESA_CONSUMER_KEY = 'u0Rbl1ohXhKQYpG1tkrCmCkZU4Qb5WSe4nVnkoA4rJA4BCXS'
-MPESA_CONSUMER_SECRET = 'tMcp2DqQLeuuhC7a3JjIfsYEhiQI0fqk275OVWCAGtLhOCPhI0PQmbLyH6OoGGOd'
+MPESA_CONSUMER_KEY = '17tijAWZQBWLRIFFuJrDGBfl1zalwr00g6wEE20cGdeHvw7l'
+MPESA_CONSUMER_SECRET = 'iX29aYc7ujvLlXssKhvG2ilFzS7Bpoa5dU9SIGoPUDrdkLWwKQD1rUEOhW7BRQ3e'
 #Shortcode to use for transactions. For sandbox use the Shortcode 1
 #provided on test credentials page
 MPESA_SHORTCODE = '1'
@@ -202,4 +202,4 @@ MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c91
 MPESA_INITIATOR_USERNAME = 'testapi'
 # Plaintext password for initiator (to be used in B2C, B2B, AccountBalance
 #and TransactionStatusQuery Transactions)
-MPESA_INITIATOR_SECURITY_CREDENTIAL = 'je5sHWMsbmESo36EBzeSVN3LvH2H2/aDU+meb07/dbL+TeTPndAB6iYqI71YXMavcvTh+rtLqO9ZeprxPhGR4rxfBJJbpVwsL5FGzuUmGRj+8nMSXBHsskqB9qBh1Vybjhthr0Mc61B9Tjx/DQP/v/Nk8BZyd9sxiL575ognIr6zp0AzHKcuHReYS2S8YifzFiOAY6rejLGX0DCh47r9Bl5iH2npcstJ0ABhBkToxA/uTY+wnv95Gxw2x4rQO4ZPXSuPiLQRHGgBW27A2umRNNRXHqf400XkBGfqtMSDa4adYrNDK+PAOZiR9Tk4jM1QScd7ZESYRKDnvPZD6vNISQ=='
+MPESA_INITIATOR_SECURITY_CREDENTIAL = 'Skb4kUuWtvsO//466Z4Jafbr3/9zZ8B7IxW4nutAPmOAcvEU4xFOVy0OaSVIJhXUFc+TIKatiXWnlkVWVefJK5kxLnq0FTQMzBGam8Yle4y/bNLj5b+jgieqpUZPfYceqktqPEjkH9K+XOhT7VIABCc/klFAXOvapx/yVesOkCgkVKbe4/vpBlA74zJ/9cH+KQyk32l+asLtgPr8qiYq3nT3HDVeYof6hQT/vQXUtd+RVHGuU8glfFj55cC2nv4/eQEKqkeHVgOardY8GXqW65vtNQSVqNec5ETLxsEqy+zbNoBZEt6uTtCNwxl2c9rcHUYKLHigVT+YUl4awnN5eQ=='

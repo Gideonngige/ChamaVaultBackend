@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test View</title>
+</head>
+<body>
+    <h1>Test View</h1>
+    
+    <form method="POST" action="{% url 'test_view' %}">
+        {% csrf_token %}
+        <label for="name">Phone Number:</label><br>
+        <input type="text" id="phonenumber" name="phonenumber"><br>
+        
+        <label for="amount">Amount:</label><br>
+        <input type="number" id="amount" name="amount"><br>
+        
+        <input type="submit" value="Submit">
+    </form>
+    
+</body>
+</html>
