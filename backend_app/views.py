@@ -351,9 +351,9 @@ def stk_push(request, phone_number, amount):
     if res_data.get("ResponseCode") == "0":
         checkout_request_id = res_data.get("CheckoutRequestID")
 
-        return JsonResponse({"message":"STK Push Sent"})
+        return JsonResponse({"message":"ok"}, status=200)
     else:
-        return JsonResponse({"error":"STK Push Failed"}, status=400)
+        return JsonResponse({"message":"failed"}, status=400)
 
 
 #end of mpesa api part
