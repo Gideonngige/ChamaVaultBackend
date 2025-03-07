@@ -177,7 +177,7 @@ def getLoans(request, chamaname, email):
         member = Members.objects.get(email=email)
         if member:
             chama_name = Chamas.objects.get(name=chamaname)
-            total_loan = Loans.objects.filter(name=member,chama=chama_name).aggregate(total=Sum('amount'))['total'] or 0
+            total_loan = Loans.objects.filter(name=member,chama=chama_name).aggregate(total=Sum('amount'))['total'] or 0.00
             return JsonResponse({"total_loan": total_loan, "interest":9.5}, safe=False)
 
         else:
@@ -193,8 +193,8 @@ def getContributions(request, chamaname, email):
 
         if member:
             chama_name = Chamas.objects.get(name=chamaname)
-            total_contributions = Contributions.objects.filter(member=member, chama=chama_name).aggregate(total=Sum('amount'))['total'] or 0
-            penalty = Contributions.objects.filter(member=member, chama=chama_name).aggregate(Sum('penality'))['penality__sum'] or 0
+            total_contributions = Contributions.objects.filter(member=member, chama=chama_name).aggregate(total=Sum('amount'))['total'] or 0.00
+            penalty = Contributions.objects.filter(member=member, chama=chama_name).aggregate(Sum('penality'))['penality__sum'] or 0.00
             return JsonResponse({"total_contributions": total_contributions, "interest":9.5, "penalty":penalty}, safe=False)
 
         else:
