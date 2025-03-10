@@ -98,7 +98,7 @@ class Transactions(models.Model):
 
 class Notifications(models.Model):
     notification_id = models.AutoField(primary_key=True)
-    member_id = models.IntegerField(null=False)
+    member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
     NOTIFICATION_TYPES = [
         ('alert', 'Alert'),
         ('event', 'Event'),

@@ -3,10 +3,10 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans
+from .models import Members, Chamas, Contributions, Loans, Notifications
 from django.db.models import Sum
 import pyrebase
 import json
@@ -198,6 +198,67 @@ def getLoans(request, chamaname, email):
     except Members.DoesNotExist:
         return JsonResponse({"message":"Invalid email address"})
 #end of getLoans api 
+
+#start of get all loans
+@api_view(['GET'])
+def getAllLoans(request):
+    try:
+        loans = Loans.objects.all()
+        serializer = LoansSerializer(loans, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    except Loans.DoesNotExist:
+        return JsonResponse({"message":"No loans found"})
+    except Exception as e:
+        return JsonResponse({"error":str(e)})
+#end of get all loan
+
+#start of confirm loan api
+def confirm_loan(request, loanee_id, approver_email):
+    try:
+        # Get the loanee
+        loanee = Loans.objects.filter(name=loanee_id).first()
+        if not loanee:
+            return JsonResponse({"message": "Loanee not found"}, status=404)
+
+        # Get the approver
+        approver = Members.objects.filter(email=approver_email).first()
+        if not approver:
+            return JsonResponse({"message": "Invalid approver email"}, status=400)
+
+        # Approve the loan
+        loanee.approved_by = approver  # Assuming approved_by is a ForeignKey to Members
+        loanee.save()
+
+        # Create a notification
+        notification = Notifications(
+            member_id=loanee_id,  # Assuming Notifications has a foreign key to Loans
+            notification_type="alert",
+            notification=f"Loan of Ksh.{loanee.amount} was approved by {approver_email}"
+        )
+        notification.save()
+
+        return JsonResponse({"message": f"You have successfully approved KES.{loanee.amount}"})
+
+    except Exception as e:
+        return JsonResponse({"message": f"An error occurred: {str(e)}"}, status=500)
+    
+#end of confirm loan api
+
+#start of get notifications api 
+def get_notifications(request, email):
+    try:
+        member_id = Members.objects.filter(email=email).first()
+        notifications = Notifications.objects.filter(member_id=member_id).order_by('notification_date')
+        serializer = NotificationsSerializer(notifications, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    except Notifications.DoesNotExist:
+        return JsonResponse({"message":"No notifications found"})
+    except Exception as e:
+        return JsonResponse({"error":str(e)})
+
+
+#end get notifications api
+
 
 #start of getSavings api
 def getContributions(request, chamaname, email):

@@ -18,4 +18,7 @@ urlpatterns = [
     path('stk_push/<str:phone_number>/<int:amount>/', views.stk_push, name='stk_push'),
     path('getLoans/<str:chamaname>/<str:email>/', views.getLoans, name='getLoans'),
     path('getContributions/<str:chamaname>/<str:email>/', views.getContributions, name='getContributions'),
+    path('getAllLoans/', views.getAllLoans, name='getAllLoans'),
+    path('confirm_loan/<int:loanee_id>/<str:approver_email>/', views.confirm_loan, name='confirm_loan'),
+    path('get_notifications/<str:email>/', views.get_notifications, name='get_notifications'),
 ]
