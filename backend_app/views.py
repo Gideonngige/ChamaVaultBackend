@@ -229,9 +229,11 @@ def confirm_loan(request, loanee_id, approver_email):
         loanee.approved_by = approver  # Assuming approved_by is a ForeignKey to Members
         loanee.save()
 
+        new_loanee_id = Members.objects.get(member_id=loanee_id)
+
         # Create a notification
         notification = Notifications(
-            member_id=loanee_id,  # Assuming Notifications has a foreign key to Loans
+            member_id=new_loanee_id,  
             notification_type="alert",
             notification=f"Loan of Ksh.{loanee.amount} was approved by {approver_email}"
         )
