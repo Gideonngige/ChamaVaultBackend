@@ -6,7 +6,7 @@ from django.utils import timezone
 from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions
 from django.db.models import Sum
 import pyrebase
 import json
@@ -92,33 +92,23 @@ def getChama(request, email):
 
 #start of contributions api
 # @csrf_exempt
-# @api_view(['POST']) 
+@api_view(['POST']) 
 def contributions(request):
     try:
-        # data = json.loads(request.body) 
-        # email = data.get('email')
-        # amount = data.get('amount')
-        # phonenumber = data.get('phonenumber')
-        email = "gtechcompany01@gmail.com"
-        phonenumber = "0797655727"
-        amount = 1 
+        data = json.loads(request.body) 
+        email = data.get('email')
+        amount = data.get('amount')
+        phonenumber = data.get('phonenumber')
+        chama_id = data.get('chama')
+
         member = Members.objects.get(email=email)
-        print(f"STK Push Request: {phonenumber}, Amount: {amount}, Email: {email}")
+        chama = Chamas.objects.get(name=f"Chama{chama_id}")
         if member:
-            print(f"STK Push Request: {phonenumber}, Amount: {amount}, Email: {email}")
-            cl = MpesaClient()
-            phone_number = phonenumber
-            amount = amount
-            account_reference = '174379'
-            transaction_desc = 'Make contributions to Chamavault'
-            callback_url = 'https://api.darajambili.com/express-payment'
-            r = cl.stk_push(phone_number, amount, account_reference,
-            transaction_desc, callback_url)
-            print(f"STK Push Response: {r.response_description}")
-            return JsonResponse(r.response_description, safe=False)
-            # contribution = Contributions(member=member, amount=amount)
-            # contribution.save()
-            # return JsonResponse({"message":f"Contribution of Ksh.{amount} was successful"})
+            contribution = Contributions(member=member, amount=amount)
+            contribution.save()
+            transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Other")
+            transaction.save()
+            return JsonResponse({"message":f"Contribution of Ksh.{amount} to chama{chama_id} was successful","status":200})
         else:
             return JsonResponse({"message":"Please signin"})
 
