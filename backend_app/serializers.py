@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Members,Loans, Notifications
+from .models import Members,Loans, Notifications, Transactions
 
 class MembersSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,4 +19,9 @@ class LoansSerializer(serializers.ModelSerializer):
 class NotificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notifications
+        fields = '__all__'
+
+class TransactionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transactions
         fields = '__all__'

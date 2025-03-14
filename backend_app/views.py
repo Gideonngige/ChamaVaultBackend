@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions
@@ -106,7 +106,7 @@ def contributions(request):
         if member:
             contribution = Contributions(member=member, amount=amount)
             contribution.save()
-            transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Other")
+            transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Contribution")
             transaction.save()
             return JsonResponse({"message":f"Contribution of Ksh.{amount} to chama{chama_id} was successful","status":200})
         else:
@@ -116,6 +116,21 @@ def contributions(request):
         return Response({"message":"Invalid email address"})
 
 #end of contributions api
+
+#start of get transactions api
+def transactions(request, transaction_type, email):
+    member = Members.objects.get(email=email)
+    try:
+        if not member:
+            return JsonResponse({"message":"Please signin"})
+        else:
+            transactions = Transactions.objects.filter(member=member, transaction_type=transaction_type).order_by('-transaction_date')
+            serializer = TransactionsSerializer(transactions, many=True)
+            return JsonResponse(serializer.data, safe=False)
+    except Members.DoesNotExist:
+        return JsonResponse({"message":"Invalid email address"})
+
+#end of get transactions api
 
 #start of loans api
 
@@ -144,9 +159,10 @@ def check_loan(email):
 #end of calculate function
 
 @api_view(['GET'])
-def loans(request, email, amount, loan_type, period):
+def loans(request, email, chama_id, amount, loan_type, period):
     try:
         member = Members.objects.get(email=email)
+        chama = Chamas.objects.get(name=f"Chama{chama_id}")
         print(member)
         loan_deadline=timezone.now() + timedelta(days=period)
         print(loan_deadline)
@@ -155,6 +171,8 @@ def loans(request, email, amount, loan_type, period):
         if check == 500:
             loan = Loans(name=member, amount=check, loan_type=loan_type, loan_deadline=loan_deadline)
             loan.save()
+            transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
+            transaction.save()
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful","status":200})
 
         elif check > 0:

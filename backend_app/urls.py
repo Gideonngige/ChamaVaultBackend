@@ -5,7 +5,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('members/<str:email>/<str:password>/', views.members, name='members'),
     path('contributions/', views.contributions, name='contributions'),
-    path('loans/<str:email>/<int:amount>/<str:loan_type>/<int:period>/', views.loans, name='loans'),
+    path('loans/<str:email>/<int:chama_id>/<int:amount>/<str:loan_type>/<int:period>/', views.loans, name='loans'),
     path('loan_allowed/<str:email>/', views.loan_allowed, name='loan_allowed'),
     path('postsignIn/<str:email>/<str:password>/', views.postsignIn, name='postsignIn'),
     path('logout/', views.logout, name='logout'),
@@ -21,4 +21,5 @@ urlpatterns = [
     path('getAllLoans/', views.getAllLoans, name='getAllLoans'),
     path('confirm_loan/<int:loanee_id>/<str:approver_email>/', views.confirm_loan, name='confirm_loan'),
     path('get_notifications/<str:email>/', views.get_notifications, name='get_notifications'),
+    path('transactions/<str:transaction_type>/<str:email>/', views.transactions, name='transactions'),
 ]
