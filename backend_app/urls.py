@@ -22,4 +22,6 @@ urlpatterns = [
     path('confirm_loan/<int:loanee_id>/<str:approver_email>/', views.confirm_loan, name='confirm_loan'),
     path('get_notifications/<str:email>/', views.get_notifications, name='get_notifications'),
     path('transactions/<str:transaction_type>/<str:email>/', views.transactions, name='transactions'),
+    path('investment/', views.investment, name='investment'),
+    path('getInvestment/<str:email>/', views.getInvestment, name='getInvestment'),
 ]

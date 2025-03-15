@@ -100,16 +100,16 @@ DATABASES = {
     }
 }
 
-# database_url = 'postgresql://  chamadatabase_user:aJZ5ctgH8E03QVk5X0JMGhlMiBFpD9ay@dpg-cun3a7ggph6c738ca3c0-a.oregon-postgres.render.com/chamadatabase'
+# database_url = 'postgresql://chamavaultdb_user:6KK2CJmbOaQ4I0LD39D6qnqnzQu1QfSJ@dpg-cvau3idumphs73aj1qc0-a.oregon-postgres.render.com/chamavaultdb'
 # DATABASES['default'] = dj_database_url.parse(database_url)
 
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'chamadatabase',  # Ensure this is correct
-#         'USER': 'chamadatabase_user',  # Remove extra spaces if any
-#         'PASSWORD': 'aJZ5ctgH8E03QVk5X0JMGhlMiBFpD9ay',  # Ensure it's correct
-#         'HOST': 'dpg-cun3a7ggph6c738ca3c0-a.oregon-postgres.render.com',
+#         'NAME': 'chamavaultdb',  # Ensure this is correct
+#         'USER': 'chamavaultdb_user',  # Remove extra spaces if any
+#         'PASSWORD': '6KK2CJmbOaQ4I0LD39D6qnqnzQu1QfSJ',  # Ensure it's correct
+#         'HOST': 'dpg-cvau3idumphs73aj1qc0-a.oregon-postgres.render.com',
 #         'PORT': '5432',
 #     }
 # }
@@ -120,7 +120,7 @@ DATABASES['default'] = dj_database_url.parse(database_url)
 
 
 
-#postgresql://chamadatabase_user:aJZ5ctgH8E03QVk5X0JMGhlMiBFpD9ay@dpg-cun3a7ggph6c738ca3c0-a.oregon-postgres.render.com/chamadatabase
+# postgresql://chamavaultdb_user:6KK2CJmbOaQ4I0LD39D6qnqnzQu1QfSJ@dpg-cvau3idumphs73aj1qc0-a.oregon-postgres.render.com/chamavaultdb
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

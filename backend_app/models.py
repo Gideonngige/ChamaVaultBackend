@@ -110,3 +110,49 @@ class Notifications(models.Model):
 
     def __str__(self):
         return f"{self.notification_type} - {self.notification}"
+
+class Investment(models.Model):
+    investment_id = models.AutoField(primary_key=True)
+    amount_invested = models.DecimalField(max_digits=10, decimal_places=2)
+    INVESTMENT_TYPES = [
+        ('real estate', 'real estate'),
+        ('stock', 'stock'),
+    ]
+    investment_type = models.CharField(max_length=20, choices=INVESTMENT_TYPES)
+    STATUS = [
+        ('active', 'active'),
+        ('completed', 'completed'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS)
+    investment_date = models.DateTimeField(default=now)
+    def __str__(self):
+        return f"{self.investment_type} - {self.amount_invested}"
+
+
+class profit_distribution(models.Model):
+    distribution_id = models.AutoField(primary_key=True)
+    investment_id = models.ForeignKey(Investment, on_delete=models.CASCADE)
+    member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
+    profit_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    def __str__(self):
+        return f"{self.member_id} - {self.profit_amount}"
+
+class investment_contribution(models.Model):
+    contribution_id = models.AutoField(primary_key=True)
+    investment_id = models.ForeignKey(Investment, on_delete=models.CASCADE)
+    member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
+    contribution_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    contribution_date = models.DateTimeField(default=now)
+    def __str__(self):
+        return f"{self.investment_id} - {self.contribution_amount}"
+
+
+class Expenses(models.Model):
+    expense_id = models.AutoField(primary_key=True)
+    expense_name = models.CharField(max_length=128)
+    expense_amount =  models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    expense_date = models.DateTimeField(auto_now_add=True)
+    approved_by = models.ForeignKey(Members, on_delete=models.CASCADE)
+    def __str__(self):
+        return f"{self.expense_name} - {self.expense_amount}"

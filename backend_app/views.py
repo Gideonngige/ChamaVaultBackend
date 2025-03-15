@@ -6,7 +6,7 @@ from django.utils import timezone
 from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses
 from django.db.models import Sum
 import pyrebase
 import json
@@ -286,6 +286,74 @@ def getContributions(request, chamaname, email):
     except Members.DoesNotExist:
         return JsonResponse({"message":"Invalid email address"})
 #end of getSavings api 
+
+#start of investment api 
+@api_view(['POST'])
+def investment(request):
+    try:
+        data = json.loads(request.body) 
+        member_id = data.get('member_id')
+        chama = data.get('chama')
+        contribution_amount = data.get('contribution_amount')
+        investment_type = data.get('investment_type')
+       
+
+        member = Members.objects.get(member_id=member_id)
+        investment_id = Investment.objects.get(investment_type=investment_type)
+        chama = Chamas.objects.get(name=f"Chama{chama_id}")
+        if member:
+            contribution = investment_contribution(investment_id=investment_id, member_id=member, contribution_amount=contribution_amount)
+            contribution.save()
+            transaction = Transactions(member=member, amount=contribution_amount, chama=chama, transaction_type="Contribution")
+            transaction.save()
+            return JsonResponse({"message":f"Investment of Ksh.{contribution_amount} was successful","status":200})
+        else:
+            return JsonResponse({"message":"Please signin"})
+
+    except Members.DoesNotExist:
+        return Response({"message":"Invalid email address"})
+#end of investment api
+
+#start of get investmet 
+def getInvestment(request, email):
+    try:
+        # Get the member based on email
+        member = Members.objects.get(email=email)
+        
+        # Fetch the member's investment contributions and profit distributions
+        investment_contri = investment_contribution.objects.filter(member_id=member)
+        profit_distri = profit_distribution.objects.filter(member_id=member)
+
+        # Initialize variables for total amounts (assuming you want to sum these up)
+        total_investment_amount = 0
+        total_profit_amount = 0
+        investment_type = None  # Initialize investment_type as None
+
+        # Loop through the investment contributions and get details
+        for contribution in investment_contri:
+            total_investment_amount += contribution.contribution_amount  # Sum up the contribution amount
+            investment_type = contribution.investment_id.investment_type  # Assuming each contribution relates to an investment type
+
+        # Loop through the profit distributions and get profit details
+        for profit in profit_distri:
+            total_profit_amount += profit.profit_amount  # Sum up the profit amounts
+
+        # If no investments are found for the member, handle that case
+        if total_investment_amount == 0 and total_profit_amount == 0:
+            return JsonResponse({"message": "No investments or profits found for this member"})
+
+        # Return the response with investment and profit data
+        return JsonResponse({
+            "investment_amount": total_investment_amount,
+            "investment_type": investment_type,
+            "profit_amount": total_profit_amount
+        })
+
+    except Members.DoesNotExist:
+        return JsonResponse({"message": "Member with this email does not exist"})
+    except Exception as e:
+        return JsonResponse({"error": str(e)})
+#end of get investment
 
 
 #start of signin api
