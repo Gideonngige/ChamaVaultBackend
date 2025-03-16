@@ -360,12 +360,21 @@ def getInvestment(request, email):
 def postsignIn(request, email, password):
     try:
         user = authe.sign_in_with_email_and_password(email,password)
+        if Members.objects.filter(email=email).exists() and user:
+            session_id = user['idToken']
+            request.session['uid'] = str(session_id)
+            return JsonResponse({"message": "Successfully logged in"})
+        elif not Members.objects.filter(email=email).exists():
+            return JsonResponse({"message": "No user found with this email,please register"})
+        elif not user:
+            return JsonResponse({"message": "Invalid email"})
+        else:
+            return JsonResponse({"message": "please register"})
     except:
         message = "Invalid Credentials!! Please Check your data"
         return JsonResponse({"message": message})
-    session_id = user['idToken']
-    request.session['uid'] = str(session_id)
-    return JsonResponse({"message": "Successfully logged in"})
+    
+    
 #end of signin api
 
 #start of logout api
