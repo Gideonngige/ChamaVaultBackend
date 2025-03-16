@@ -100,11 +100,13 @@ def contributions(request):
         amount = data.get('amount')
         phonenumber = data.get('phonenumber')
         chama_id = data.get('chama')
+        print(chama_id)
 
         member = Members.objects.get(email=email)
         chama = Chamas.objects.get(name=f"Chama{chama_id}")
+        print(chama)
         if member:
-            contribution = Contributions(member=member, amount=amount)
+            contribution = Contributions(member=member, amount=amount, chama=chama)
             contribution.save()
             transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Contribution")
             transaction.save()
@@ -199,7 +201,8 @@ def getLoans(request, chamaname, email):
         if member:
             chama_name = Chamas.objects.get(name=chamaname)
             total_loan = Loans.objects.filter(name=member,chama=chama_name).aggregate(total=Sum('amount'))['total'] or 0.00
-            return JsonResponse({"total_loan": total_loan, "interest":9.5}, safe=False)
+            loan_date = list(Loans.objects.filter(name=member, chama=chama_name).values('loan_date'))
+            return JsonResponse({"total_loan": total_loan,"loan_date":loan_date, "interest":9.5}, safe=False)
 
         else:
             return JsonResponse({"message":"No loans found"})
@@ -279,7 +282,8 @@ def getContributions(request, chamaname, email):
             chama_name = Chamas.objects.get(name=chamaname)
             total_contributions = Contributions.objects.filter(member=member, chama=chama_name).aggregate(total=Sum('amount'))['total'] or 0.00
             penalty = Contributions.objects.filter(member=member, chama=chama_name).aggregate(Sum('penality'))['penality__sum'] or 0.00
-            return JsonResponse({"total_contributions": total_contributions, "interest":9.5, "penalty":penalty}, safe=False)
+            saving_date = list(Contributions.objects.filter(member=member, chama=chama_name).values('contribution_date'))
+            return JsonResponse({"total_contributions": total_contributions,"saving_date":saving_date, "interest":9.5, "penalty":penalty}, safe=False)
 
         else:
             return JsonResponse({"message":"No Contributions found"})
