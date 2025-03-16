@@ -60,7 +60,7 @@ class Loans(models.Model):
     ]
     loan_type = models.CharField(max_length=20, choices=LOAN_TYPES, default='LTL')
     loan_status = models.CharField(max_length=20, choices=LOAN_STATUS, default='pending')
-    approved_by = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='approved_by', default=4)
+    approved_by = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='approved_by', default=1)
     loan_date = models.DateTimeField(auto_now_add=True)
     loan_deadline = models.DateTimeField(validators=[validate_date])
 
