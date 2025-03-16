@@ -166,20 +166,23 @@ def loans(request, email, chama_id, amount, loan_type, period):
         member = Members.objects.get(email=email)
         chama = Chamas.objects.get(name=f"Chama{chama_id}")
         print(member)
+        print(chama)
         loan_deadline=timezone.now() + timedelta(days=period)
         print(loan_deadline)
         check = check_loan(email)
         print(check)
         if check == 500:
-            loan = Loans(name=member, amount=check, loan_type=loan_type, loan_deadline=loan_deadline)
+            loan = Loans(name=member, chama=chama, amount=check, loan_type=loan_type, loan_deadline=loan_deadline)
             loan.save()
             transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
             transaction.save()
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful","status":200})
 
         elif check > 0:
-            loan = Loans(name=member, amount=amount, loan_type=loan_type, loan_deadline=loan_deadline)
+            loan = Loans(name=member,chama=chama, amount=amount, loan_type=loan_type, loan_deadline=loan_deadline)
             loan.save()
+            transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
+            transaction.save()
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful","status":200})
         else:
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} exceeds the maximum loan limit"})
