@@ -18,6 +18,9 @@ import requests
 from requests.auth import HTTPBasicAuth
 import datetime
 import base64
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from .models import Members, Chamas
 # import pyrebase4 as pyrebase
 
 # Create your views here.
@@ -80,14 +83,24 @@ def getMember(request, email):
 #end of get member api
 
 #get chama api
+
 @api_view(['GET'])
 def getChama(request, email):
     try:
-        chama = Members.objects.get(email=email)
-        serializer = ChamasSerializer(chama)
-        return JsonResponse(serializer.data)
-    except Members.DoesNotExist:
-        return JsonResponse({"message":"Invalid chama name"})
+        # Get all Members associated with the given email
+        members = Members.objects.filter(email=email)
+
+        if not members.exists():
+            return JsonResponse({"message": "No chamas found for this email"}, status=404)
+
+        # Extract chama names instead of objects
+        chamas = [member.chama.name for member in members]  # Extract only the name
+
+        return JsonResponse({"chamas": chamas}, safe=False)
+
+    except Exception as e:
+        return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
+
 #end of get chama api
 
 

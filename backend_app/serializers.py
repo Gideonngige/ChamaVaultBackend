@@ -9,7 +9,7 @@ class MembersSerializer(serializers.ModelSerializer):
 class ChamasSerializer(serializers.ModelSerializer):
     class Meta:
         model = Members
-        fields = ['chama']
+        fields = '__all__'
 
 class LoansSerializer(serializers.ModelSerializer):
     class Meta:
