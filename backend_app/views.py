@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses
@@ -89,6 +89,25 @@ def getChama(request, email):
     except Members.DoesNotExist:
         return JsonResponse({"message":"Invalid chama name"})
 #end of get chama api
+
+
+#get allchama api
+@api_view(['GET'])
+def allchamas(request):
+    try:
+        chamas = list(Chamas.objects.values('name'))  # Convert QuerySet to a list
+        print(chamas)
+
+        if not chamas:
+            return JsonResponse({"message": "There is no any chama"}, status=404)
+
+        return JsonResponse({"Chamas": chamas}, safe=False)  # Directly return JSON data
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+#end of get allchama api
+
+
 
 #start of contributions api
 # @csrf_exempt
