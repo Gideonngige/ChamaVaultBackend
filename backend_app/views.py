@@ -303,13 +303,21 @@ def investment(request):
         chama = data.get('chama')
         contribution_amount = data.get('contribution_amount')
         investment_type = data.get('investment_type')
+        investment_duration = data.get('investment_duration')
+
+        print(f"{member_id} {chama} {contribution_amount} {investment_type} {investment_duration}")
        
 
         member = Members.objects.get(member_id=member_id)
-        investment_id = Investment.objects.get(investment_type=investment_type)
-        chama = Chamas.objects.get(name=f"Chama{chama_id}")
+        print(member)
+        investmentId = Investment.objects.filter(investment_type=investment_type).first()
+        investment_id = investmentId.investment_id
+        print(investment_id)
+        if not investment_id:
+            return JsonResponse({"message":"Invalid investment type"}, status=400)
+        chama = Chamas.objects.get(name=f"Chama{chama}")
         if member:
-            contribution = investment_contribution(investment_id=investment_id, member_id=member, contribution_amount=contribution_amount)
+            contribution = investment_contribution(investment_id=investmentId, member_id=member, contribution_amount=contribution_amount, investment_duration=investment_duration)
             contribution.save()
             transaction = Transactions(member=member, amount=contribution_amount, chama=chama, transaction_type="Contribution")
             transaction.save()
@@ -322,45 +330,57 @@ def investment(request):
 #end of investment api
 
 #start of get investmet 
+@api_view(['GET'])
 def getInvestment(request, email):
     try:
         # Get the member based on email
         member = Members.objects.get(email=email)
         
-        # Fetch the member's investment contributions and profit distributions
+        # Fetch all investment contributions and profit distributions for the member
         investment_contri = investment_contribution.objects.filter(member_id=member)
         profit_distri = profit_distribution.objects.filter(member_id=member)
 
-        # Initialize variables for total amounts (assuming you want to sum these up)
-        total_investment_amount = 0
-        total_profit_amount = 0
-        investment_type = None  # Initialize investment_type as None
+        # Initialize a list to store detailed investments
+        investments = []
 
-        # Loop through the investment contributions and get details
         for contribution in investment_contri:
-            total_investment_amount += contribution.contribution_amount  # Sum up the contribution amount
-            investment_type = contribution.investment_id.investment_type  # Assuming each contribution relates to an investment type
+            # Find related profits for this specific investment
+            related_profits = profit_distri.filter(investment_id=contribution.investment_id)
+            total_profit_amount = sum(profit.profit_amount for profit in related_profits)
 
-        # Loop through the profit distributions and get profit details
-        for profit in profit_distri:
-            total_profit_amount += profit.profit_amount  # Sum up the profit amounts
+            # Append investment details to the list
+            investments.append({
+                "investment_type": contribution.investment_id.investment_type,
+                "investment_amount": contribution.contribution_amount,
+                "profit_amount": total_profit_amount,
+                "investment_duration": contribution.investment_duration,
+            })
 
-        # If no investments are found for the member, handle that case
-        if total_investment_amount == 0 and total_profit_amount == 0:
-            return JsonResponse({"message": "No investments or profits found for this member"})
+        # If no investments are found for the member, return a message
+        if not investments:
+            return JsonResponse({"message": "No investments or profits found for this member"}, status=404)
 
-        # Return the response with investment and profit data
-        return JsonResponse({
-            "investment_amount": total_investment_amount,
-            "investment_type": investment_type,
-            "profit_amount": total_profit_amount
-        })
+        return JsonResponse({"investments": investments}, status=200)
 
     except Members.DoesNotExist:
-        return JsonResponse({"message": "Member with this email does not exist"})
+        return JsonResponse({"message": "Member with this email does not exist"}, status=404)
     except Exception as e:
-        return JsonResponse({"error": str(e)})
+        return JsonResponse({"error": str(e)}, status=500)
 #end of get investment
+
+#start of calculate investment api
+@api_view(['GET'])
+def calculate_investment(request, member_id):
+    member = Members.objects.get(member_id=member_id)
+    total_investment = investment_contribution.objects.filter(member_id=member).aggregate(total=Sum('contribution_amount'))['total'] or 0.00
+    if total_investment:
+        print(total_investment)
+        return JsonResponse({"total": total_investment}, status=200)
+    else:
+        return JsonResponse({"total":0})
+
+#end of calculate investment api
+
 
 
 #start of signin api

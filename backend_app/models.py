@@ -143,6 +143,7 @@ class investment_contribution(models.Model):
     member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
     contribution_amount = models.DecimalField(max_digits=10, decimal_places=2)
     contribution_date = models.DateTimeField(default=now)
+    investment_duration = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     def __str__(self):
         return f"{self.investment_id} - {self.contribution_amount}"
 
