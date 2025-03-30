@@ -32,7 +32,7 @@ class Members(models.Model):
     joined_date = models.DateTimeField(default=now)
 
     def __str__(self):
-        return self.name
+        return f"{self.member_id} - {self.name}"
 
 class Contributions(models.Model):
     contribution_id = models.AutoField(primary_key=True)
@@ -60,7 +60,7 @@ class Loans(models.Model):
     ]
     loan_type = models.CharField(max_length=20, choices=LOAN_TYPES, default='LTL')
     loan_status = models.CharField(max_length=20, choices=LOAN_STATUS, default='pending')
-    approved_by = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='approved_by', default=1)
+    approved_by = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='approved_by', default=15)
     loan_date = models.DateTimeField(auto_now_add=True)
     loan_deadline = models.DateTimeField(validators=[validate_date])
 

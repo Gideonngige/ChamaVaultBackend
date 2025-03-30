@@ -73,9 +73,10 @@ def members(request, email, password):
 
 #get member api
 @api_view(['GET'])
-def getMember(request, email):
+def getMember(request, email, chama):
     try:
-        member = Members.objects.get(email=email)
+        chama = Chamas.objects.get(name=chama)
+        member = Members.objects.get(chama=chama,email=email)
         serializer = MembersSerializer(member)
         return JsonResponse(serializer.data)
     except Members.DoesNotExist:
@@ -134,7 +135,7 @@ def contributions(request):
         chama_id = data.get('chama')
         print(chama_id)
 
-        member = Members.objects.get(email=email)
+        member = Members.objects.filter(email=email).first()
         chama = Chamas.objects.get(name=f"Chama{chama_id}")
         print(chama)
         if member:
@@ -153,7 +154,7 @@ def contributions(request):
 
 #start of get transactions api
 def transactions(request, transaction_type, email):
-    member = Members.objects.get(email=email)
+    member = Members.objects.filter(email=email).first()
     try:
         if not member:
             return JsonResponse({"message":"Please signin"})
@@ -174,7 +175,7 @@ from django.db.models import Sum
 
 def check_loan(email):
     try:
-        member = Members.objects.get(email=email)
+        member = Members.objects.filter(email=email).first()
     except Members.DoesNotExist:
         return "Member not found"
 
@@ -195,7 +196,7 @@ def check_loan(email):
 @api_view(['GET'])
 def loans(request, email, chama_id, amount, loan_type, period):
     try:
-        member = Members.objects.get(email=email)
+        member = Members.objects.filter(email=email).first()
         chama = Chamas.objects.get(name=f"Chama{chama_id}")
         print(member)
         print(chama)
@@ -232,7 +233,7 @@ def loan_allowed(request, email):
 #start of get loans api
 def getLoans(request, chamaname, email):
     try:
-        member = Members.objects.get(email=email)
+        member = Members.objects.filter(email=email).first()
         if member:
             chama_name = Chamas.objects.get(name=chamaname)
             total_loan = Loans.objects.filter(name=member,chama=chama_name).aggregate(total=Sum('amount'))['total'] or 0.00
@@ -311,7 +312,7 @@ def get_notifications(request, email):
 #start of getSavings api
 def getContributions(request, chamaname, email):
     try:
-        member = Members.objects.get(email=email)
+        member = Members.objects.filter(email=email).first()
 
         if member:
             chama_name = Chamas.objects.get(name=chamaname)
@@ -366,7 +367,7 @@ def investment(request):
 def getInvestment(request, email):
     try:
         # Get the member based on email
-        member = Members.objects.get(email=email)
+        member = Members.objects.filter(email=email).first()
         
         # Fetch all investment contributions and profit distributions for the member
         investment_contri = investment_contribution.objects.filter(member_id=member)
@@ -416,15 +417,16 @@ def calculate_investment(request, member_id):
 
 
 #start of signin api
-def postsignIn(request, email, password):
+def postsignIn(request, email, password, chama):
     try:
+        chama = Chamas.objects.get(name=chama)
         user = authe.sign_in_with_email_and_password(email,password)
-        if Members.objects.filter(email=email).exists() and user:
+        if Members.objects.filter(chama=chama, email=email).exists() and user:
             session_id = user['idToken']
             request.session['uid'] = str(session_id)
             return JsonResponse({"message": "Successfully logged in"})
-        elif not Members.objects.filter(email=email).exists():
-            return JsonResponse({"message": "No user found with this email,please register"})
+        elif not Members.objects.filter(chama=chama, email=email).exists():
+            return JsonResponse({"message": f"No user found with this email found in {chama},please register"})
         elif not user:
             return JsonResponse({"message": "Invalid email"})
         else:
@@ -460,22 +462,27 @@ def postsignUp(request):
         password = data.get("password")
 
         # Check if email already exists
-        if Members.objects.filter(email=email).exists():
-            return JsonResponse({"message": "Email already exists"}, status=400)
-
-        # Create user
-        user = authe.create_user_with_email_and_password(email, password)
-        uid = user['localId']
-        
+        chama = Chamas.objects.get(name=chama_name)
+        if Members.objects.filter(email=email, chama=chama).exists():
+            return JsonResponse({"message": "You already have account in this chama"}, status=400)
         # Check if chama exists
         try:
             chama = Chamas.objects.get(name=chama_name)
         except Chamas.DoesNotExist:
             return JsonResponse({"message": "Chama not found"}, status=400)
-
-        # Save member
-        member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=uid)
-        member.save()
+        
+        member = Members.objects.get(email=email)
+        if Members.objects.filter(email=email).exists():
+            member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=member.password)
+            member.save()
+        
+        else:
+            # Create user
+            user = authe.create_user_with_email_and_password(email, password)
+            uid = user['localId']
+            # Save member
+            member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=uid)
+            member.save()
 
         return JsonResponse({"message": "Successfully registered"}, status=201)
 
