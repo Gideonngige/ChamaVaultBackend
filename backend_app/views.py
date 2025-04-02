@@ -21,6 +21,7 @@ import base64
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from .models import Members, Chamas
+import uuid
 # import pyrebase4 as pyrebase
 
 # Create your views here.
@@ -132,16 +133,17 @@ def contributions(request):
         email = data.get('email')
         amount = data.get('amount')
         phonenumber = data.get('phonenumber')
-        chama_id = data.get('chama')
+        chama_id = data.get('chama_id')
+        transactionRef = data.get('transactionRef')
         print(chama_id)
 
         member = Members.objects.filter(email=email).first()
         chama = Chamas.objects.get(name=f"Chama{chama_id}")
         print(chama)
         if member:
-            contribution = Contributions(member=member, amount=amount, chama=chama)
+            contribution = Contributions(transactionRef=transactionRef, member=member, amount=amount, chama=chama)
             contribution.save()
-            transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Contribution")
+            transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Contribution")
             transaction.save()
             return JsonResponse({"message":f"Contribution of Ksh.{amount} to chama{chama_id} was successful","status":200})
         else:

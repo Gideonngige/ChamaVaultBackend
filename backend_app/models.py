@@ -36,6 +36,7 @@ class Members(models.Model):
 
 class Contributions(models.Model):
     contribution_id = models.AutoField(primary_key=True)
+    transactionRef = models.CharField(max_length=50, default="T073397058487061")
     member = models.ForeignKey(Members, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
@@ -80,6 +81,7 @@ class LoanRepayment(models.Model):
 
 class Transactions(models.Model):
     transaction_id = models.AutoField(primary_key=True)
+    transactionRef = models.CharField(max_length=50, default="T073397058487061")
     member = models.ForeignKey(Members, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE)
