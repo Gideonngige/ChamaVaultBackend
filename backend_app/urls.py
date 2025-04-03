@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('members/<str:email>/<str:password>/', views.members, name='members'),
+    path('members/<str:email>/<int:chama_id>/', views.members, name='members'),
     path('contributions/', views.contributions, name='contributions'),
     path('loans/<str:email>/<int:chama_id>/<int:amount>/<str:loan_type>/<int:period>/', views.loans, name='loans'),
     path('loan_allowed/<str:email>/', views.loan_allowed, name='loan_allowed'),
@@ -16,7 +16,6 @@ urlpatterns = [
     path('getChama/<str:email>/', views.getChama, name='getChama'),
     path('allchamas/', views.allchamas, name='allchamas'),
     path('sendEmail/<str:email_to>/<str:applink>/', views.sendEmail, name='sendEmail'),
-    path('stk_push/<str:phone_number>/<int:amount>/', views.stk_push, name='stk_push'),
     path('getLoans/<str:chamaname>/<str:email>/', views.getLoans, name='getLoans'),
     path('getContributions/<str:chamaname>/<str:email>/', views.getContributions, name='getContributions'),
     path('getAllLoans/', views.getAllLoans, name='getAllLoans'),

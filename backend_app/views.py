@@ -55,13 +55,12 @@ def index(request):
 
 #start of get members api
 @api_view(['GET','POST','DELETE'])
-def members(request, email, password):
+def members(request, email, chama_id):
     if request.method == 'GET':
-        # check_password = Members.objects.filter(password=password).values()
         try:
-            user = authe.sign_in_with_email_and_password(email,password)
-            if user:
-                members = Members.objects.all()
+            member = Members.objects.filter(chama=chama_id,email=email)
+            if member:
+                members = Members.objects.filter(chama=chama_id)
                 serializer = MembersSerializer(members, many=True)
                 return Response(serializer.data)
             else:
