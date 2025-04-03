@@ -123,10 +123,6 @@ DATABASES['default'] = dj_database_url.parse(database_url)
 
 # postgresql://chamavaultdb_user:6KK2CJmbOaQ4I0LD39D6qnqnzQu1QfSJ@dpg-cvau3idumphs73aj1qc0-a.oregon-postgres.render.com/chamavaultdb
 
-PAYSTACK_SECRET_KEY = "sk_test_adb8f6fbc4bab87dc6814514ab1d7b9df87faea4"
-PAYSTACK_PUBLIC_KEY = "pk_test_6633ec1991d6ba92490835f6cbc1b7934876a55f"
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
