@@ -154,13 +154,13 @@ def contributions(request):
 #end of contributions api
 
 #start of get transactions api
-def transactions(request, transaction_type, email):
+def transactions(request, transaction_type, email, chama_id):
     member = Members.objects.filter(email=email).first()
     try:
         if not member:
             return JsonResponse({"message":"Please signin"})
         else:
-            transactions = Transactions.objects.filter(member=member, transaction_type=transaction_type).order_by('-transaction_date')
+            transactions = Transactions.objects.filter(member=member, chama=chama_id, transaction_type=transaction_type).order_by('-transaction_date')
             serializer = TransactionsSerializer(transactions, many=True)
             return JsonResponse(serializer.data, safe=False)
     except Members.DoesNotExist:
