@@ -25,4 +25,5 @@ urlpatterns = [
     path('investment/', views.investment, name='investment'),
     path('getInvestment/<str:email>/', views.getInvestment, name='getInvestment'),
     path('calculate_investment/<int:member_id>/', views.calculate_investment, name='calculate_investment'),
+    path('totalchamamembers/<str:chama>/', views.totalchamamembers, name='totalchamamembers'),
 ]

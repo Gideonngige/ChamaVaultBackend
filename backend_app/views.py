@@ -22,6 +22,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from .models import Members, Chamas
 import uuid
+import africastalking
 # import pyrebase4 as pyrebase
 
 # Create your views here.
@@ -82,6 +83,14 @@ def getMember(request, email, chama):
     except Members.DoesNotExist:
         return JsonResponse({"message":"Invalid email address"})
 #end of get member api
+
+# start of count total chama members
+@api_view(['GET'])
+def totalchamamembers(request, chama):
+    chama = Chamas.objects.get(name=chama)
+    total_members = Members.objects.filter(chama=chama).count()
+    return JsonResponse({"total_members":total_members})
+# end of count total chama members
 
 #get chama api
 
@@ -194,6 +203,9 @@ def check_loan(email):
 
 #end of calculate function
 
+
+africastalking.initialize(username='sandbox', api_key='atsk_35b2da862cc85124c522aec60fa8eedde173fc50f9fb9e0645ca97e6252f2c535930259b')
+sms = africastalking.SMS
 @api_view(['GET'])
 def loans(request, email, chama_id, amount, loan_type, period):
     try:
@@ -215,6 +227,9 @@ def loans(request, email, chama_id, amount, loan_type, period):
             approval = LoanApproval(loan_id=loan_id, chairperson_approval="pending", treasurer_approval="pending", secretary_approval="pending")
             approval.save()
 
+            response = sms.send("Hello", ["+254797655727"])
+            print(response)
+
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful","status":200})
 
         elif check > 0:
@@ -226,6 +241,10 @@ def loans(request, email, chama_id, amount, loan_type, period):
             loan_id = Loans.objects.get(name=member, chama=chama, amount=amount, loan_type=loan_type, loan_deadline=loan_deadline)
             approval = LoanApproval(loan_id=loan_id, chairperson_approval="pending", treasurer_approval="pending", secretary_approval="pending")
             approval.save()
+
+            # response = sms.send("Hello", ["07123456789"], sender_id="Chamavault")
+            response = sms.send("Hello", ["+254797655727"])
+            print(response)
 
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful","status":200})
         else:
