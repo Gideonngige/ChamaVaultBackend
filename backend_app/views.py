@@ -338,9 +338,9 @@ def confirm_loan(request, loan_id, loanee_id, approver_email, status):
 #end of confirm loan api
 
 #start of get notifications api 
-def get_notifications(request, email):
+def get_notifications(request, email, chama_id):
     try:
-        member_id = Members.objects.filter(email=email).first()
+        member_id = Members.objects.filter(email=email, chama=chama_id).first()
         notifications = Notifications.objects.filter(member_id=member_id).order_by('notification_date')
         serializer = NotificationsSerializer(notifications, many=True)
         return JsonResponse(serializer.data, safe=False)
