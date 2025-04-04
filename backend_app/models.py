@@ -29,6 +29,13 @@ class Members(models.Model):
     email = models.EmailField(max_length=200)
     phone_number = models.CharField(max_length=15)
     password = models.CharField(max_length=128)
+    ROLE = [
+        ('member','member'),
+        ('chairperson','chairperson'),
+        ('treasurer','treasurer'),
+        ('secretary','secretary'),
+    ]
+    role = models.CharField(max_length=20, choices=ROLE, default='member')
     joined_date = models.DateTimeField(default=now)
 
     def __str__(self):
@@ -60,13 +67,30 @@ class Loans(models.Model):
         ('pending','pending'),
     ]
     loan_type = models.CharField(max_length=20, choices=LOAN_TYPES, default='LTL')
-    loan_status = models.CharField(max_length=20, choices=LOAN_STATUS, default='pending')
-    approved_by = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='approved_by', default=15)
     loan_date = models.DateTimeField(auto_now_add=True)
     loan_deadline = models.DateTimeField(validators=[validate_date])
 
     def __str__(self):
         return f"{self.name} - {self.loan_type} - {self.amount}"
+
+class LoanApproval(models.Model):
+    loanapproval_id = models.AutoField(primary_key=True)
+    loan_id = models.ForeignKey(Loans, on_delete=models.CASCADE)
+    STATUS = [
+        ('pending','pending'),
+        ('declined','declined'),
+        ('approved','approved'),
+    ]
+    chairperson_approval = models.CharField(max_length=45, choices=STATUS, default='pending')
+    treasurer_approval = models.CharField(max_length=45, choices=STATUS, default='pending')
+    secretary_approval = models.CharField(max_length=45, choices=STATUS, default='pending')
+
+
+class CreditScore(models.Model):
+    credit_id = models.AutoField(primary_key=True)
+    member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
+    credit_score = models.DecimalField(max_digits=10, decimal_places=2)
+    
 
 class LoanRepayment(models.Model):
     repayment_id = models.AutoField(primary_key=True)

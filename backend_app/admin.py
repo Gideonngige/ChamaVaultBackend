@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import Chamas, Members, Contributions, Loans, Notifications, Transactions, LoanRepayment, Investment, profit_distribution, investment_contribution, Expenses
+from . models import Chamas, Members, Contributions, Loans, Notifications, Transactions, LoanRepayment, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, CreditScore
 
 # Register your models here.
 admin.site.register(Chamas)
@@ -13,3 +13,5 @@ admin.site.register(Investment)
 admin.site.register(profit_distribution)
 admin.site.register(investment_contribution)
 admin.site.register(Expenses)
+admin.site.register(LoanApproval)
+admin.site.register(CreditScore)

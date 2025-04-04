@@ -6,7 +6,7 @@ from django.utils import timezone
 from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval
 from django.db.models import Sum
 import pyrebase
 import json
@@ -210,6 +210,11 @@ def loans(request, email, chama_id, amount, loan_type, period):
             loan.save()
             transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
             transaction.save()
+
+            loan_id = Loans.objects.get(name=member, chama=chama, amount=amount, loan_type=loan_type, loan_deadline=loan_deadline)
+            approval = LoanApproval(loan_id=loan_id, chairperson_approval="pending", treasurer_approval="pending", secretary_approval="pending")
+            approval.save()
+
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful","status":200})
 
         elif check > 0:
@@ -217,6 +222,11 @@ def loans(request, email, chama_id, amount, loan_type, period):
             loan.save()
             transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
             transaction.save()
+
+            loan_id = Loans.objects.get(name=member, chama=chama, amount=amount, loan_type=loan_type, loan_deadline=loan_deadline)
+            approval = LoanApproval(loan_id=loan_id, chairperson_approval="pending", treasurer_approval="pending", secretary_approval="pending")
+            approval.save()
+
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful","status":200})
         else:
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} exceeds the maximum loan limit"})
@@ -249,11 +259,30 @@ def getLoans(request, chamaname, email):
 
 #start of get all loans
 @api_view(['GET'])
-def getAllLoans(request):
+def getAllLoans(request, role):
     try:
-        loans = Loans.objects.all()
-        serializer = LoansSerializer(loans, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        if role == "chairperson":
+            loans = LoanApproval.objects.filter(chairperson_approval="pending")
+            loan_ids = loans.values_list('loan_id', flat=True)
+            print(list(loan_ids))  
+            loans = Loans.objects.filter(loan_id__in=loan_ids)
+            serializer = LoansSerializer(loans, many=True)
+            return JsonResponse(serializer.data, safe=False)
+        elif role == "treasurer":
+            loans = LoanApproval.objects.filter(treasurer_approval="pending")
+            loan_ids = loans.values_list('loan_id', flat=True)
+            print(list(loan_ids))  
+            loans = Loans.objects.filter(loan_id__in=loan_ids)
+            serializer = LoansSerializer(loans, many=True)
+            return JsonResponse(serializer.data, safe=False)
+        elif role == "secretary":
+            loans = LoanApproval.objects.filter(secretary_approval="pending")
+            loan_ids = loans.values_list('loan_id', flat=True)
+            print(list(loan_ids))  
+            loans = Loans.objects.filter(loan_id__in=loan_ids)
+            serializer = LoansSerializer(loans, many=True)
+            return JsonResponse(serializer.data, safe=False)
+        
     except Loans.DoesNotExist:
         return JsonResponse({"message":"No loans found"})
     except Exception as e:
@@ -261,11 +290,12 @@ def getAllLoans(request):
 #end of get all loan
 
 #start of confirm loan api
-def confirm_loan(request, loanee_id, approver_email):
+def confirm_loan(request, loan_id, loanee_id, approver_email, status):
     try:
-        # Get the loanee
-        loanee = Loans.objects.filter(name=loanee_id).first()
-        if not loanee:
+        # Get the loan
+        try:
+            loanee = Loans.objects.get(loan_id=loan_id, name=loanee_id)
+        except Loans.DoesNotExist:
             return JsonResponse({"message": "Loanee not found"}, status=404)
 
         # Get the approver
@@ -273,25 +303,38 @@ def confirm_loan(request, loanee_id, approver_email):
         if not approver:
             return JsonResponse({"message": "Invalid approver email"}, status=400)
 
-        # Approve the loan
-        loanee.approved_by = approver  # Assuming approved_by is a ForeignKey to Members
-        loanee.save()
+        # Get the approval object
+        approval = LoanApproval.objects.filter(loan_id=loan_id).first()
+        if not approval:
+            return JsonResponse({"message": "Loan was not found"}, status=404)
 
-        new_loanee_id = Members.objects.get(member_id=loanee_id)
+        # Check role
+        if approver.role == "member":
+            return JsonResponse({"message": "You are not allowed to approve this loan"}, status=403)
+        elif approver.role == "chairperson":
+            approval.chairperson_approval = status
+        elif approver.role == "treasurer":
+            approval.treasurer_approval = status
+        elif approver.role == "secretary":
+            approval.secretary_approval = status
+        else:
+            return JsonResponse({"message": "Invalid role"}, status=403)
+
+        approval.save()
 
         # Create a notification
-        notification = Notifications(
-            member_id=new_loanee_id,  
+        new_loanee_id = Members.objects.get(member_id=loanee_id)
+        Notifications.objects.create(
+            member_id=new_loanee_id,
             notification_type="alert",
-            notification=f"Loan of Ksh.{loanee.amount} was approved by {approver_email}"
+            notification=f"Loan of Ksh.{loanee.amount} was {status} by {approver.role}"
         )
-        notification.save()
 
-        return JsonResponse({"message": f"You have successfully approved KES.{loanee.amount}"})
+        return JsonResponse({"message": f"You have successfully {status} the loan of KES.{loanee.amount}"})
 
     except Exception as e:
         return JsonResponse({"message": f"An error occurred: {str(e)}"}, status=500)
-    
+
 #end of confirm loan api
 
 #start of get notifications api 
