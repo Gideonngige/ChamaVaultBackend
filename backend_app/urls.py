@@ -26,4 +26,6 @@ urlpatterns = [
     path('getInvestment/<str:email>/', views.getInvestment, name='getInvestment'),
     path('calculate_investment/<int:member_id>/', views.calculate_investment, name='calculate_investment'),
     path('totalchamamembers/<str:chama>/', views.totalchamamembers, name='totalchamamembers'),
+    path('totalchamasavings/<str:chama>/', views.totalchamasavings, name='totalchamasavings'),
+    path('totalchamaloans/<str:chama>/', views.totalchamaloans, name='totalchamaloans'),
 ]

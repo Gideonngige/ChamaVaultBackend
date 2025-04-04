@@ -92,6 +92,22 @@ def totalchamamembers(request, chama):
     return JsonResponse({"total_members":total_members})
 # end of count total chama members
 
+# start of total chama savings
+@api_view(['GET'])
+def totalchamasavings(request, chama):
+    chama = Chamas.objects.get(name=chama)
+    total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
+    return JsonResponse({"total_savings":total_savings})
+# end of total chama savings
+
+# start of total loans savings
+@api_view(['GET'])
+def totalchamaloans(request, chama):
+    chama = Chamas.objects.get(name=chama)
+    total_loans = Loans.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
+    return JsonResponse({"total_loans":total_loans})
+# end of total loans savings
+
 #get chama api
 
 @api_view(['GET'])
