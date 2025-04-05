@@ -621,9 +621,10 @@ def createpoll(request):
     question = request.data.get('question')
     stop_time = request.data.get('stop_time')
     choices = request.data.get('choices')  # This is an array of choices
+    chama_id = request.data.get('chama_id')
 
     # Create the Poll object
-    poll = Poll.objects.create(question=question, stop_time=stop_time)
+    poll = Poll.objects.create(chama=chama_id, question=question, stop_time=stop_time)
 
     # Create the Choice objects
     for choice_text in choices:
