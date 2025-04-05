@@ -28,4 +28,8 @@ urlpatterns = [
     path('totalchamamembers/<str:chama>/', views.totalchamamembers, name='totalchamamembers'),
     path('totalchamasavings/<str:chama>/', views.totalchamasavings, name='totalchamasavings'),
     path('totalchamaloans/<str:chama>/', views.totalchamaloans, name='totalchamaloans'),
+    path('createpoll/', views.createpoll, name='createpoll'),
+    path('activepolls/<int:chama_id>/', views.activepolls, name='activepolls'),
+    path('membervote/', views.membervote, name='membervote'),
+    path('checkmembervoted/<int:member_id>/<int:chama_id>/', views.checkmembervoted, name='checkmembervoted'),
 ]

@@ -6,7 +6,7 @@ from django.utils import timezone
 from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll
 from django.db.models import Sum
 import pyrebase
 import json
@@ -613,3 +613,118 @@ def sendEmail(request, email_to, applink):
     return JsonResponse({"message": "ok"})
 
 #end of send email api
+
+# start of create poll api
+@api_view(['POST'])
+def createpoll(request):
+    # Extract poll data from the request
+    question = request.data.get('question')
+    stop_time = request.data.get('stop_time')
+    choices = request.data.get('choices')  # This is an array of choices
+
+    # Create the Poll object
+    poll = Poll.objects.create(question=question, stop_time=stop_time)
+
+    # Create the Choice objects
+    for choice_text in choices:
+        Choice.objects.create(poll=poll, choice_text=choice_text)
+
+    # Return a response
+    return Response({"message": "Poll created successfully"})
+# end create poll api
+
+# start of active polls api
+def activepolls(request, chama_id):
+    # Get current time
+    now = timezone.now()
+    print(now)
+    polls = Poll.objects.get()
+    print(polls.question)
+    print(polls.stop_time)
+
+    # Filter polls that are active (stop time is in the future)
+    polls = Poll.objects.filter(chama=chama_id, stop_time__lt=now)
+    print(polls)
+    # Prepare poll data
+    polls_data = []
+    for poll in polls:
+        # Fetch choices related to the poll
+        print(poll.stop_time)
+        choices = Choice.objects.filter(poll=poll)
+        choices_data = []
+        for choice in choices:
+            choices_data.append({
+                'id': choice.id,
+                'choice_text': choice.choice_text,
+                'votes': choice.votes
+            })
+        print(choices_data)
+        polls_data.append({
+            'id': poll.id,
+            'question': poll.question,
+            'stop_time': poll.stop_time,
+            'choices': choices_data
+        })
+
+    return JsonResponse({'polls': polls_data})
+# end of active polls api
+
+# start of member poll
+@api_view(['POST'])
+def membervote(request):
+    print("Request Data:", request.data)  # Log the incoming data
+    
+    # Extract data from the request
+    poll_id = request.data.get('poll_id')
+    choice_id = request.data.get('choice_id')
+    email = request.data.get('email')
+    chama_id = request.data.get('chama_id')
+    
+
+    print("Poll ID:", poll_id)
+    print("Choice ID:", choice_id)
+    print("Email:", email)
+    print("Chama ID:", chama_id)
+
+    # Fetch the poll and choice objects
+    try:
+        poll = Poll.objects.get(id=poll_id)
+    except Poll.DoesNotExist:
+        return Response({"error": "Poll not found"}, status=404)
+
+    try:
+        choice = Choice.objects.get(id=choice_id)
+    except Choice.DoesNotExist:
+        return Response({"error": "Choice not found"}, status=404)
+
+    member_id = Members.objects.filter(email=email).first()
+    if not member_id:
+        return Response({"error": "Member not found"}, status=404)
+
+    member_poll = MemberPoll.objects.filter(member=member_id, chama=chama_id, poll=poll).exists()
+    if member_poll:
+        return Response({"message": "You have already voted for this poll"}, status=200)
+    else:
+        # Create a MemberPoll object to record the member's vote
+        member_poll = MemberPoll.objects.create(member=member_id, chama=chama_id, poll=poll, choice=choice)
+        # Increment the vote count for the chosen option
+        choice.votes += 1
+        choice.save()
+
+    return Response({"message": "Vote recorded successfully"})
+
+# end of member poll
+# start of check member voted
+@api_view(['GET'])
+def checkmembervoted(request, member_id, chama_id):
+    try:
+        member_poll = MemberPoll.objects.filter(member=member_id, chama=chama_id).exists()
+        if member_poll:
+            return Response({"message": "true"}, status=200)
+        else:
+            return Response({"message": "false"}, status=200)
+    except MemberPoll.DoesNotExist:
+        return Response({"message": "MemberPoll not found"}, status=404)
+# end of check member voted
+
+
