@@ -6,7 +6,7 @@ from django.utils import timezone
 from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting
 from django.db.models import Sum
 import pyrebase
 import json
@@ -325,7 +325,7 @@ def getAllLoans(request, role):
 #end of get all loan
 
 #start of confirm loan api
-def confirm_loan(request, loan_id, loanee_id, approver_email, status):
+def confirm_loan(request, loan_id, loanee_id, approver_email, status, chama_id):
     try:
         # Get the loan
         try:
@@ -359,8 +359,10 @@ def confirm_loan(request, loan_id, loanee_id, approver_email, status):
 
         # Create a notification
         new_loanee_id = Members.objects.get(member_id=loanee_id)
+        chama = Chamas.objects.get(name=f"Chama{chama_id}")
         Notifications.objects.create(
             member_id=new_loanee_id,
+            chama=chama,
             notification_type="alert",
             notification=f"Loan of Ksh.{loanee.amount} was {status} by {approver.role}"
         )
@@ -376,7 +378,7 @@ def confirm_loan(request, loan_id, loanee_id, approver_email, status):
 def get_notifications(request, email, chama_id):
     try:
         member_id = Members.objects.filter(email=email, chama=chama_id).first()
-        notifications = Notifications.objects.filter(member_id=member_id).order_by('notification_date')
+        notifications = Notifications.objects.filter(chama=chama_id, member_id=member_id).order_by('notification_date')
         serializer = NotificationsSerializer(notifications, many=True)
         return JsonResponse(serializer.data, safe=False)
     except Notifications.DoesNotExist:
@@ -728,4 +730,34 @@ def checkmembervoted(request, member_id, chama_id):
         return Response({"message": "MemberPoll not found"}, status=404)
 # end of check member voted
 
+#start of schedule meeting api
+@api_view(['POST'])
+def schedulemeeting(request):
+    try:
+        data = json.loads(request.body) 
+        agenda = data.get('message')
+        meeting_date = data.get('date')
+        chama_id = data.get('chama_id')
+        member_id = data.get('member_id')
+
+        member = Members.objects.filter(member_id=member_id).first()
+        chama = Chamas.objects.get(name=f"Chama{chama_id}")
+
+        if member:
+            meeting = Meeting(chama=chama, agenda=agenda, meeting_date=meeting_date)
+            meeting.save()
+
+            Notifications.objects.create(
+            chama=chama,
+            member_id=member,
+            notification_type="event",
+            notification=f"Meeting Schedule on {meeting_date}.\n{agenda}"
+            )
+            return JsonResponse({"message":f"Meeting of {agenda} was scheduled successfully","status":200})
+        else:
+            return JsonResponse({"message":"Please signin"})
+
+    except Members.DoesNotExist:
+        return Response({"message":"Invalid email address"})
+# end of schedule meeting api
 

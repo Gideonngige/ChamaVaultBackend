@@ -125,6 +125,7 @@ class Transactions(models.Model):
 class Notifications(models.Model):
     notification_id = models.AutoField(primary_key=True)
     member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
     NOTIFICATION_TYPES = [
         ('alert', 'Alert'),
         ('event', 'Event'),
@@ -211,3 +212,14 @@ class MemberPoll(models.Model):
 
     def __str__(self):
         return f"{self.member} - {self.poll} - {self.choice}"
+
+
+class Meeting(models.Model):
+    meeting_id = models.AutoField(primary_key=True)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
+    agenda = models.CharField(max_length=255)
+    meeting_date = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.agenda

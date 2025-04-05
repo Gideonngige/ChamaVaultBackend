@@ -19,7 +19,7 @@ urlpatterns = [
     path('getLoans/<str:chamaname>/<str:email>/', views.getLoans, name='getLoans'),
     path('getContributions/<str:chamaname>/<str:email>/', views.getContributions, name='getContributions'),
     path('getAllLoans/<str:role>/', views.getAllLoans, name='getAllLoans'),
-    path('confirm_loan/<int:loan_id>/<int:loanee_id>/<str:approver_email>/<str:status>/', views.confirm_loan, name='confirm_loan'),
+    path('confirm_loan/<int:loan_id>/<int:loanee_id>/<str:approver_email>/<str:status>/<int:chama_id>/', views.confirm_loan, name='confirm_loan'),
     path('get_notifications/<str:email>/<int:chama_id>/', views.get_notifications, name='get_notifications'),
     path('transactions/<str:transaction_type>/<str:email>/<int:chama_id>/', views.transactions, name='transactions'),
     path('investment/', views.investment, name='investment'),
@@ -32,4 +32,5 @@ urlpatterns = [
     path('activepolls/<int:chama_id>/', views.activepolls, name='activepolls'),
     path('membervote/', views.membervote, name='membervote'),
     path('checkmembervoted/<int:member_id>/<int:chama_id>/', views.checkmembervoted, name='checkmembervoted'),
+    path('schedulemeeting/', views.schedulemeeting, name='schedulemeeting'),
 ]
