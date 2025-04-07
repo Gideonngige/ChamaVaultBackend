@@ -6,7 +6,7 @@ from django.utils import timezone
 from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment
 from django.db.models import Sum
 import pyrebase
 import json
@@ -177,6 +177,38 @@ def contributions(request):
         return Response({"message":"Invalid email address"})
 
 #end of contributions api
+
+
+#start of payloan api
+# @csrf_exempt
+@api_view(['POST']) 
+def payloan(request):
+    try:
+        data = json.loads(request.body) 
+        email = data.get('email')
+        amount = data.get('amount')
+        phonenumber = data.get('phonenumber')
+        chama_id = data.get('chama_id')
+        transactionRef = data.get('transactionRef')
+        print(chama_id)
+
+        member = Members.objects.filter(email=email).first()
+        chama = Chamas.objects.get(name=f"Chama{chama_id}")
+        print(chama)
+        if member:
+            repayment = LoanRepayment(transactionRef=transactionRef, chama=chama, member=member, amount=amount)
+            repayment.save()
+            transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Loan repayment")
+            transaction.save()
+            return JsonResponse({"message":f"Loan repayment of Ksh.{amount} to chama{chama_id} was successful","status":200})
+        else:
+            return JsonResponse({"message":"Please signin"})
+
+    except Members.DoesNotExist:
+        return Response({"message":"Invalid email address"})
+
+#end of payloan api
+
 
 #start of get transactions api
 def transactions(request, transaction_type, email, chama_id):

@@ -33,4 +33,5 @@ urlpatterns = [
     path('membervote/', views.membervote, name='membervote'),
     path('checkmembervoted/<int:member_id>/<int:chama_id>/', views.checkmembervoted, name='checkmembervoted'),
     path('schedulemeeting/', views.schedulemeeting, name='schedulemeeting'),
+    path('payloan/', views.payloan, name='payloan'),
 ]
