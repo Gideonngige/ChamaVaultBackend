@@ -102,7 +102,7 @@ class LoanRepayment(models.Model):
     payment_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} - {self.amount}"
+        return f"{self.chama} - {self.amount}"
 
 class Transactions(models.Model):
     transaction_id = models.AutoField(primary_key=True)

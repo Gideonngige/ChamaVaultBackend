@@ -217,7 +217,11 @@ def transactions(request, transaction_type, email, chama_id):
         if not member:
             return JsonResponse({"message":"Please signin"})
         else:
-            transactions = Transactions.objects.filter(member=member, chama=chama_id, transaction_type=transaction_type).order_by('-transaction_date')
+            if transaction_type == "Loan":
+                transactions = Transactions.objects.filter(member=member, chama=chama_id, transaction_type__in=[transaction_type, "Loan repayment"]).order_by('-transaction_date')
+            elif transaction_type == "Contribution":
+                transactions = Transactions.objects.filter(member=member, chama=chama_id, transaction_type__in=[transaction_type]).order_by('-transaction_date')
+            
             serializer = TransactionsSerializer(transactions, many=True)
             return JsonResponse(serializer.data, safe=False)
     except Members.DoesNotExist:
