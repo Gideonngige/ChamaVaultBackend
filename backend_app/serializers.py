@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Members,Loans, Notifications, Transactions, Chamas
+from .models import Members,Loans, Notifications, Transactions, Chamas, Contributions
 
 class MembersSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,5 +27,13 @@ class TransactionsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AllChamasSerializer(serializers.ModelSerializer):
-    model = Chamas 
-    fields = '[name]'
+    class Meta:
+        model = Chamas 
+        fields = '[name]'
+    
+
+class ContributionsSerializer(serializers.ModelSerializer):
+    member = serializers.StringRelatedField()
+    class Meta:
+        model = Contributions
+        fields = '__all__'

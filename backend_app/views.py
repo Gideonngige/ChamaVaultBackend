@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer 
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment
@@ -797,3 +797,58 @@ def schedulemeeting(request):
         return Response({"message":"Invalid email address"})
 # end of schedule meeting api
 
+# create transfer recepient api
+@api_view(['GET'])
+def create_transfer_recipient(request):
+    url = "https://api.paystack.co/transferrecipient"
+    headers = {
+        "Authorization": f"Bearer sk_test_adb8f6fbc4bab87dc6814514ab1d7b9df87faea4",
+        "Content-Type": "application/json",
+    }
+    data = {
+    "type": "mobile_money",
+    "name": "Gideon Ushindi",
+    "account_number": "0710000000",  # This is the M-Pesa phone number (format: 2547XXXXXXXX)
+    "bank_code": "MPESA",  # This is the M-Pesa bank code
+    "currency": "KES",
+    "mobile_money": {
+        "phone": "0710000000",
+        "provider": "mpesa"  # MUST be exactly "mpesa"
+    }
+}
+
+    response = requests.post(url, json=data, headers=headers)
+    return JsonResponse(response.json())
+# end
+
+# start of initiating payment
+@api_view(['GET'])
+def initiate_transfer(request):
+    url = "https://api.paystack.co/transfer"
+    headers = {
+        "Authorization": "Bearer sk_test_adb8f6fbc4bab87dc6814514ab1d7b9df87faea4",  # Replace with your secret key
+        "Content-Type": "application/json",
+    }
+
+    data = {
+        "source": "balance",  # Use your Paystack balance
+        "amount": 5000,       # Amount in **kobo** or **cents** (so KES 50 = 5000)
+        "recipient": "RCP_m8cwtwr2j9dimcr",  # Use the recipient_code you just got
+        "reason": "Withdrawal to M-Pesa"
+    }
+
+    response = requests.post(url, json=data, headers=headers)
+    print(response.json())
+    return JsonResponse(response.json())
+
+# end of initiating payment
+
+#get members contribution
+def getmemberscontribution(request, chama_id):
+    try:
+        contributions = Contributions.objects.filter(chama=chama_id).order_by('-contribution_date')
+        serializer = ContributionsSerializer(contributions, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    except Members.DoesNotExist:
+        return JsonResponse({"message":"Invalid email address"})
+# end of get memebr contrinution

@@ -34,4 +34,7 @@ urlpatterns = [
     path('checkmembervoted/<int:member_id>/<int:chama_id>/', views.checkmembervoted, name='checkmembervoted'),
     path('schedulemeeting/', views.schedulemeeting, name='schedulemeeting'),
     path('payloan/', views.payloan, name='payloan'),
+    path('create_transfer_recipient/', views.create_transfer_recipient, name='create_transfer_recipient'),
+    path('initiate_transfer/', views.initiate_transfer, name='initiate_transfer'),
+    path('getmemberscontribution/<int:chama_id>/', views.getmemberscontribution, name='getmemberscontribution'),
 ]
