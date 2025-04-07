@@ -37,4 +37,5 @@ urlpatterns = [
     path('create_transfer_recipient/', views.create_transfer_recipient, name='create_transfer_recipient'),
     path('initiate_transfer/', views.initiate_transfer, name='initiate_transfer'),
     path('getmemberscontribution/<int:chama_id>/', views.getmemberscontribution, name='getmemberscontribution'),
+    path('getexpenses/<int:chama_id>/', views.getexpenses, name='getexpenses'),
 ]

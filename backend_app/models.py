@@ -178,13 +178,19 @@ class investment_contribution(models.Model):
 
 class Expenses(models.Model):
     expense_id = models.AutoField(primary_key=True)
-    expense_name = models.CharField(max_length=128)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
+    EXPENSES = [
+        ('rent', 'rent'),
+        ('travel', 'travel'),
+        ('business', 'business'),
+        ('other', 'other'),
+    ]
+    expense_type = models.CharField(max_length=20, choices=EXPENSES, default='other')
     expense_amount =  models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
     expense_date = models.DateTimeField(auto_now_add=True)
-    approved_by = models.ForeignKey(Members, on_delete=models.CASCADE)
     def __str__(self):
-        return f"{self.expense_name} - {self.expense_amount}"
+        return f"{self.expense_type} - {self.expense_amount}"
 
 class Poll(models.Model):
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)

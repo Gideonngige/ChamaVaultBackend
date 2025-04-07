@@ -852,3 +852,15 @@ def getmemberscontribution(request, chama_id):
     except Members.DoesNotExist:
         return JsonResponse({"message":"Invalid email address"})
 # end of get memebr contrinution
+
+# start of get expenses api
+def getexpenses(request, chama_id):
+    try:
+        total_rent = Expenses.objects.filter(chama=chama_id, expense_type="rent").aggregate(total=Sum('expense_amount'))['total'] or 0.00
+        total_travel = Expenses.objects.filter(chama=chama_id, expense_type="travel").aggregate(total=Sum('expense_amount'))['total'] or 0.00
+        total_business = Expenses.objects.filter(chama=chama_id, expense_type="business").aggregate(total=Sum('expense_amount'))['total'] or 0.00
+
+        return JsonResponse({"total_rent": total_rent, "total_travel": total_travel, "total_business": total_business})
+    except Expenses.DoesNotExist:
+        return JsonResponse({"message":"Invalid chama ID"})
+# end of get expenses api
