@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Members,Loans, Notifications, Transactions, Chamas, Contributions
+from .models import Members,Loans, Notifications, Transactions, Chamas, Contributions,Message
 
 class MembersSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,3 +37,8 @@ class ContributionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contributions
         fields = '__all__'
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = ['id', 'text', 'sender', 'timestamp']

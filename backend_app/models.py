@@ -230,3 +230,13 @@ class Meeting(models.Model):
 
     def __str__(self):
         return self.agenda
+
+class Message(models.Model):
+    text = models.TextField()
+    member = models.ForeignKey(Members, on_delete=models.CASCADE)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
+    sender = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def _str_(self):
+        return f"{self.sender}: {self.text[:20]}"

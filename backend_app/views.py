@@ -3,10 +3,10 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer 
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message
 from django.db.models import Sum
 import pyrebase
 import json
@@ -662,7 +662,8 @@ def createpoll(request):
     chama_id = request.data.get('chama_id')
 
     # Create the Poll object
-    poll = Poll.objects.create(chama=chama_id, question=question, stop_time=stop_time)
+    chama = Chamas.objects.get(chama_id=chama_id)
+    poll = Poll.objects.create(chama=chama, question=question, stop_time=stop_time)
 
     # Create the Choice objects
     for choice_text in choices:
@@ -674,30 +675,20 @@ def createpoll(request):
 
 # start of active polls api
 def activepolls(request, chama_id):
-    # Get current time
     now = timezone.now()
-    print(now)
-    polls = Poll.objects.get()
-    print(polls.question)
-    print(polls.stop_time)
 
-    # Filter polls that are active (stop time is in the future)
+    # Get all polls that are active (stop_time is in the future)
     polls = Poll.objects.filter(chama=chama_id, stop_time__lt=now)
-    print(polls)
-    # Prepare poll data
+
     polls_data = []
     for poll in polls:
-        # Fetch choices related to the poll
-        print(poll.stop_time)
         choices = Choice.objects.filter(poll=poll)
-        choices_data = []
-        for choice in choices:
-            choices_data.append({
-                'id': choice.id,
-                'choice_text': choice.choice_text,
-                'votes': choice.votes
-            })
-        print(choices_data)
+        choices_data = [{
+            'id': choice.id,
+            'choice_text': choice.choice_text,
+            'votes': choice.votes
+        } for choice in choices]
+
         polls_data.append({
             'id': poll.id,
             'question': poll.question,
@@ -706,7 +697,8 @@ def activepolls(request, chama_id):
         })
 
     return JsonResponse({'polls': polls_data})
-# end of active polls api
+# end of activepolls api
+
 
 # start of member poll
 @api_view(['POST'])
@@ -755,9 +747,9 @@ def membervote(request):
 # end of member poll
 # start of check member voted
 @api_view(['GET'])
-def checkmembervoted(request, member_id, chama_id):
+def checkmembervoted(request, member_id, chama_id, poll_id):
     try:
-        member_poll = MemberPoll.objects.filter(member=member_id, chama=chama_id).exists()
+        member_poll = MemberPoll.objects.filter(member=member_id, chama=chama_id, poll=poll_id).exists()
         if member_poll:
             return Response({"message": "true"}, status=200)
         else:
@@ -777,7 +769,7 @@ def schedulemeeting(request):
         member_id = data.get('member_id')
 
         member = Members.objects.filter(member_id=member_id).first()
-        chama = Chamas.objects.get(name=f"Chama{chama_id}")
+        chama = Chamas.objects.get(chama_id=chama_id)
 
         if member:
             meeting = Meeting(chama=chama, agenda=agenda, meeting_date=meeting_date)
@@ -864,3 +856,42 @@ def getexpenses(request, chama_id):
     except Expenses.DoesNotExist:
         return JsonResponse({"message":"Invalid chama ID"})
 # end of get expenses api
+
+#start of messaging api
+@api_view(['POST'])
+def sendmessage(request):
+    try:
+        data = json.loads(request.body) 
+        text = data.get('text')
+        sender = data.get('sender')
+        timestamp = data.get('timestamp')
+        chama_id = data.get('chama')
+        member_id = data.get('member_id')
+
+        chama = Chamas.objects.get(chama_id=chama_id)
+        member = Members.objects.get(member_id=member_id)
+
+        if member:
+            Message.objects.create(
+            text=text,
+            member=member,
+            chama=chama,
+            sender=sender,
+            timestamp=timestamp
+            )
+
+            return JsonResponse({"message":"Message sent successfully"})
+        else:
+            return JsonResponse({"message":"Please sign in to  continue chatting"})
+    
+    except Members.DoesNotExist:
+        return JsonResponse({"message":"Please sign in to start chatting"})
+# end of messaging api
+
+# start of get messages api
+def getmessages(request, chama_id):
+    # member_id = Members.objects.filter(email=email, chama=chama_id).first()
+    messages = Message.objects.filter(chama=chama_id).order_by('timestamp')
+    serializer = MessageSerializer(messages, many=True)
+    return JsonResponse(serializer.data, safe=False)
+# end of get messages api
