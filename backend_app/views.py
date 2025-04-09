@@ -328,6 +328,19 @@ def getLoans(request, chamaname, email):
         return JsonResponse({"message":"Invalid email address"})
 #end of getLoans api 
 
+# get loan repayment for specific member
+def getloanrepayment(request, chamaname, member_id):
+    chama_name = Chamas.objects.get(name=chamaname)
+    print(chama_name)
+    member = Members.objects.filter(member_id=member_id, chama=chama_name).first()
+    print(member)
+    if member:
+        total_repayment = LoanRepayment.objects.filter(chama=chama_name, member=member).aggregate(total=Sum('amount'))['total'] or 0.00
+        return JsonResponse({"total_repayment":total_repayment})
+    else:
+        return JsonResponse({"message":"Please login"})
+# end of get loan repayment for specific member
+
 #start of get all loans
 @api_view(['GET'])
 def getAllLoans(request, role):

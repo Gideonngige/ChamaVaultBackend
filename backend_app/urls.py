@@ -17,6 +17,7 @@ urlpatterns = [
     path('allchamas/', views.allchamas, name='allchamas'),
     path('sendEmail/<str:email_to>/<str:applink>/', views.sendEmail, name='sendEmail'),
     path('getLoans/<str:chamaname>/<str:email>/', views.getLoans, name='getLoans'),
+    path('getloanrepayment/<str:chamaname>/<int:member_id>/', views.getloanrepayment, name='getloanrepayment'),
     path('getContributions/<str:chamaname>/<str:email>/', views.getContributions, name='getContributions'),
     path('getAllLoans/<str:role>/', views.getAllLoans, name='getAllLoans'),
     path('confirm_loan/<int:loan_id>/<int:loanee_id>/<str:approver_email>/<str:status>/<int:chama_id>/', views.confirm_loan, name='confirm_loan'),
