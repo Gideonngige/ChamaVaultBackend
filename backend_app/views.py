@@ -644,7 +644,7 @@ def postsignUp(request):
         except Chamas.DoesNotExist:
             return JsonResponse({"message": "Chama not found"}, status=400)
         
-        member = Members.objects.get(email=email)
+        # member = Members.objects.get(email=email)
         if Members.objects.filter(email=email).exists():
             member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=member.password)
             member.save()
