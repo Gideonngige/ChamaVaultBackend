@@ -313,13 +313,13 @@ def loan_allowed(request, email):
     return Response({"max_loan":f"Ksh.{max_loan}"})
 
 #start of get loans api
-def getLoans(request, chamaname, email):
+def getLoans(request, chama_id, email):
     try:
         member = Members.objects.filter(email=email).first()
         if member:
-            chama_name = Chamas.objects.get(name=chamaname)
-            total_loan = Loans.objects.filter(name=member,chama=chama_name).aggregate(total=Sum('amount'))['total'] or 0.00
-            loan_date = list(Loans.objects.filter(name=member, chama=chama_name).values('loan_date'))
+            chama = Chamas.objects.get(chama_id=chama_id)
+            total_loan = Loans.objects.filter(name=member,chama=chama).aggregate(total=Sum('amount'))['total'] or 0.00
+            loan_date = list(Loans.objects.filter(name=member, chama=chama).values('loan_date'))
             return JsonResponse({"total_loan": total_loan,"loan_date":loan_date, "interest":9.5}, safe=False)
 
         else:
@@ -408,7 +408,7 @@ def confirm_loan(request, loan_id, loanee_id, approver_email, status, chama_id):
 
         # Create a notification
         new_loanee_id = Members.objects.get(member_id=loanee_id)
-        chama = Chamas.objects.get(name=f"Chama{chama_id}")
+        chama = Chamas.objects.get(chama_id=chama_id)
         Notifications.objects.create(
             member_id=new_loanee_id,
             chama=chama,
@@ -440,15 +440,15 @@ def get_notifications(request, email, chama_id):
 
 
 #start of getSavings api
-def getContributions(request, chamaname, email):
+def getContributions(request, chama_id, email):
     try:
         member = Members.objects.filter(email=email).first()
 
         if member:
-            chama_name = Chamas.objects.get(name=chamaname)
-            total_contributions = Contributions.objects.filter(member=member, chama=chama_name).aggregate(total=Sum('amount'))['total'] or 0.00
-            penalty = Contributions.objects.filter(member=member, chama=chama_name).aggregate(Sum('penality'))['penality__sum'] or 0.00
-            saving_date = list(Contributions.objects.filter(member=member, chama=chama_name).values('contribution_date'))
+            chama = Chamas.objects.get(chama_id=chama_id)
+            total_contributions = Contributions.objects.filter(member=member, chama=chama_id).aggregate(total=Sum('amount'))['total'] or 0.00
+            penalty = Contributions.objects.filter(member=member, chama=chama_id).aggregate(Sum('penality'))['penality__sum'] or 0.00
+            saving_date = list(Contributions.objects.filter(member=member, chama=chama_id).values('contribution_date'))
             return JsonResponse({"total_contributions": total_contributions,"saving_date":saving_date, "interest":9.5, "penalty":penalty}, safe=False)
 
         else:
