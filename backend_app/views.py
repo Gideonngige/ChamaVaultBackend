@@ -162,7 +162,7 @@ def contributions(request):
         print(chama_id)
 
         member = Members.objects.filter(email=email).first()
-        chama = Chamas.objects.get(name=f"Chama{chama_id}")
+        chama = Chamas.objects.get(chama_id=chama_id)
         print(chama)
         if member:
             contribution = Contributions(transactionRef=transactionRef, member=member, amount=amount, chama=chama)
@@ -193,7 +193,7 @@ def payloan(request):
         print(chama_id)
 
         member = Members.objects.filter(email=email).first()
-        chama = Chamas.objects.get(name=f"Chama{chama_id}")
+        chama = Chamas.objects.get(chama_id=chama_id)
         print(chama)
         if member:
             repayment = LoanRepayment(transactionRef=transactionRef, chama=chama, member=member, amount=amount)
@@ -262,7 +262,7 @@ sms = africastalking.SMS
 def loans(request, email, chama_id, amount, loan_type, period):
     try:
         member = Members.objects.filter(email=email).first()
-        chama = Chamas.objects.get(name=f"Chama{chama_id}")
+        chama = Chamas.objects.get(chama_id=chama_id)
         print(member)
         print(chama)
         loan_deadline=timezone.now() + timedelta(days=period)
@@ -644,7 +644,7 @@ def postsignUp(request):
         except Chamas.DoesNotExist:
             return JsonResponse({"message": "Chama not found"}, status=400)
         
-        # member = Members.objects.get(email=email)
+        member = Members.objects.get(email=email)
         if Members.objects.filter(email=email).exists():
             member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=member.password)
             member.save()
