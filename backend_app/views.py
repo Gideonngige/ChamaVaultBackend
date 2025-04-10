@@ -492,43 +492,86 @@ def investment(request):
         return Response({"message":"Invalid email address"})
 #end of investment api
 
-#start of get investmet 
-@api_view(['GET'])
-def getInvestment(request, email):
-    try:
-        # Get the member based on email
-        member = Members.objects.filter(email=email).first()
-        
-        # Fetch all investment contributions and profit distributions for the member
-        investment_contri = investment_contribution.objects.filter(member_id=member)
-        profit_distri = profit_distribution.objects.filter(member_id=member)
 
-        # Initialize a list to store detailed investments
+
+#start of get investmet 
+
+# function to calculate profit earn
+# Function to calculate profit earned based on the principal and duration
+def calcprofit(principal, duration_months):
+    interest_rate = 7  # Assuming the rate is for 3 months
+    # Calculate the monthly interest rate
+    monthly_rate = int(interest_rate / 3 ) # 7% for 3 months, so divide by 3 for monthly rate
+    # Calculate the profit based on the duration
+    print("Duration " + str(duration_months))
+    profit = (principal * monthly_rate * duration_months) / 100
+    print("Profit from function" + str(profit))
+    return round(profit, 2)
+
+@api_view(['GET'])
+def getInvestment(request, email, chama_id):
+    try:
+        # Get the member and chama
+        member = Members.objects.filter(email=email).first()
+        chama = Chamas.objects.filter(chama_id=chama_id).first()
+
+        if not member or not chama:
+            return JsonResponse({"message": "Member or Chama not found"}, status=404)
+
+        # Get contributions for the member in the chama
+        investment_contri = investment_contribution.objects.filter(chama=chama, member_id=member)
+
+        # Process profits only if not already saved
+        for contribution in investment_contri:
+            # Calculate profit using both amount and duration
+            print(contribution.investment_duration)
+            print("amount" + str(contribution.contribution_amount))
+            profit_earned = calcprofit(contribution.contribution_amount, contribution.investment_duration)
+            print("Profit earned" + str(profit_earned))
+
+            # Avoid duplicate entries
+            existing_profit = profit_distribution.objects.filter(
+                investment_contribution_id=contribution,
+                member_id=member,
+                chama=chama
+            ).first()
+
+            if not existing_profit:
+                profit = profit_distribution(
+                    investment_contribution_id=contribution,
+                    member_id=member,
+                    chama=chama,
+                    profit_amount=profit_earned
+                )
+                profit.save()
+
+        # Fetch profits
+        profit_distri = profit_distribution.objects.filter(member_id=member, chama=chama)
+
+        # Prepare investment list
         investments = []
 
         for contribution in investment_contri:
-            # Find related profits for this specific investment
-            related_profits = profit_distri.filter(investment_id=contribution.investment_id)
-            total_profit_amount = sum(profit.profit_amount for profit in related_profits)
+            related_profits = profit_distri.filter(investment_contribution_id=contribution)
+            total_profit_amount = sum(
+                profit.profit_amount or 0 for profit in related_profits
+            )
 
-            # Append investment details to the list
             investments.append({
-                "investment_type": contribution.investment_id.investment_type,
+                "investment_type": contribution.investment_id.investment_type if contribution.investment_id else "Unknown",
                 "investment_amount": contribution.contribution_amount,
-                "profit_amount": total_profit_amount,
+                "profit_amount": round(total_profit_amount, 2),
                 "investment_duration": contribution.investment_duration,
             })
 
-        # If no investments are found for the member, return a message
         if not investments:
             return JsonResponse({"message": "No investments or profits found for this member"}, status=404)
 
         return JsonResponse({"investments": investments}, status=200)
 
-    except Members.DoesNotExist:
-        return JsonResponse({"message": "Member with this email does not exist"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
 #end of get investment
 
 #start of calculate investment api

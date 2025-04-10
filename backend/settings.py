@@ -104,16 +104,16 @@ DATABASES = {
 # database_url = 'postgresql://chamavaultdb_user:6KK2CJmbOaQ4I0LD39D6qnqnzQu1QfSJ@dpg-cvau3idumphs73aj1qc0-a.oregon-postgres.render.com/chamavaultdb'
 # DATABASES['default'] = dj_database_url.parse(database_url)
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'chamavaultdb',  # Ensure this is correct
-#         'USER': 'chamavaultdb_user',  # Remove extra spaces if any
-#         'PASSWORD': '6KK2CJmbOaQ4I0LD39D6qnqnzQu1QfSJ',  # Ensure it's correct
-#         'HOST': 'dpg-cvau3idumphs73aj1qc0-a.oregon-postgres.render.com',
-#         'PORT': '5432',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'chamavaultdb',  # Ensure this is correct
+        'USER': 'chamavaultdb_user',  # Remove extra spaces if any
+        'PASSWORD': '6KK2CJmbOaQ4I0LD39D6qnqnzQu1QfSJ',  # Ensure it's correct
+        'HOST': 'dpg-cvau3idumphs73aj1qc0-a.oregon-postgres.render.com',
+        'PORT': '5432',
+    }
+}
 
 
 database_url = os.environ.get('DATABASE_URL')
