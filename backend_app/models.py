@@ -115,6 +115,8 @@ class Transactions(models.Model):
         ('Loan repayment','Loan repayment'),
         ('Loan','Loan'),
         ('Expense','Expense'),
+        ('Expense','Expense'),
+        ('Investment','Investment'),
         ('Other','Other'),
     ]
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE, default='Other')

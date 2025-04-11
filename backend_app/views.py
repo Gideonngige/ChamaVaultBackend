@@ -427,15 +427,13 @@ def confirm_loan(request, loan_id, loanee_id, approver_email, status, chama_id):
 def get_notifications(request, email, chama_id):
     try:
         member_id = Members.objects.filter(email=email, chama=chama_id).first()
-        notifications = Notifications.objects.filter(chama=chama_id, member_id=member_id).order_by('notification_date')
+        notifications = Notifications.objects.filter(chama=chama_id, member_id=member_id).order_by('-notification_date')
         serializer = NotificationsSerializer(notifications, many=True)
         return JsonResponse(serializer.data, safe=False)
     except Notifications.DoesNotExist:
         return JsonResponse({"message":"No notifications found"})
     except Exception as e:
         return JsonResponse({"error":str(e)})
-
-
 #end get notifications api
 
 
@@ -484,7 +482,7 @@ def investment(request):
         if member:
             contribution = investment_contribution(chama=chama, transactionRef=transactionRef, investment_id=investmentId, member_id=member, contribution_amount=contribution_amount, investment_duration=investment_duration)
             contribution.save()
-            transaction = Transactions(transactionRef=transactionRef, member=member, amount=contribution_amount, chama=chama, transaction_type="Contribution")
+            transaction = Transactions(transactionRef=transactionRef, member=member, amount=contribution_amount, chama=chama, transaction_type="Investment")
             transaction.save()
             return JsonResponse({"message":f"Investment of Ksh.{contribution_amount} was successful","status":200})
         else:
