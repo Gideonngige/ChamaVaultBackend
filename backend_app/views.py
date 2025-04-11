@@ -442,7 +442,7 @@ def get_notifications(request, email, chama_id):
 #start of getSavings api
 def getContributions(request, chama_id, email):
     try:
-        member = Members.objects.filter(chama_id=chama_id, email=email).first()
+        member = Members.objects.filter(email=email).first()
 
         if member:
             chama = Chamas.objects.get(chama_id=chama_id)
@@ -464,15 +464,16 @@ def investment(request):
         data = json.loads(request.body) 
         email = data.get('email')
         chama_id = data.get('chama_id')
+        phonenumber = data.get('phonenumber')
         transactionRef = data.get('transactionRef')
         contribution_amount = data.get('contribution_amount')
         investment_type = data.get('investment_type')
         investment_duration = data.get('investment_duration')
 
-        print(f"{member_id} {chama} {contribution_amount} {investment_type} {investment_duration}")
+        print(f"{email} {chama}_id {contribution_amount} {investment_type} {investment_duration}")
        
 
-        member = Members.objects.get(chama=chama_id, email=email)
+        member = Members.objects.get(email=email).first()
         print(member)
         investmentId = Investment.objects.filter(investment_type=investment_type).first()
         investment_id = investmentId.investment_id
