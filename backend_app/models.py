@@ -158,6 +158,8 @@ class Investment(models.Model):
 
 class investment_contribution(models.Model):
     contribution_id = models.AutoField(primary_key=True)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
+    transactionRef = models.CharField(max_length=50, default="T073397058487061")
     investment_id = models.ForeignKey(Investment, on_delete=models.CASCADE)
     member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
     contribution_amount = models.DecimalField(max_digits=10, decimal_places=2)

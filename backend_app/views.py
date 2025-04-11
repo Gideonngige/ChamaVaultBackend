@@ -161,7 +161,7 @@ def contributions(request):
         transactionRef = data.get('transactionRef')
         print(chama_id)
 
-        member = Members.objects.filter(email=email).first()
+        member = Members.objects.filter(chama=chama_id, email=email).first()
         chama = Chamas.objects.get(chama_id=chama_id)
         print(chama)
         if member:
@@ -442,7 +442,7 @@ def get_notifications(request, email, chama_id):
 #start of getSavings api
 def getContributions(request, chama_id, email):
     try:
-        member = Members.objects.filter(email=email).first()
+        member = Members.objects.filter(chama_id=chama_id, email=email).first()
 
         if member:
             chama = Chamas.objects.get(chama_id=chama_id)
@@ -462,8 +462,9 @@ def getContributions(request, chama_id, email):
 def investment(request):
     try:
         data = json.loads(request.body) 
-        member_id = data.get('member_id')
-        chama = data.get('chama')
+        email = data.get('email')
+        chama_id = data.get('chama_id')
+        transactionRef = data.get('transactionRef')
         contribution_amount = data.get('contribution_amount')
         investment_type = data.get('investment_type')
         investment_duration = data.get('investment_duration')
@@ -471,18 +472,18 @@ def investment(request):
         print(f"{member_id} {chama} {contribution_amount} {investment_type} {investment_duration}")
        
 
-        member = Members.objects.get(member_id=member_id)
+        member = Members.objects.get(chama=chama_id, email=email)
         print(member)
         investmentId = Investment.objects.filter(investment_type=investment_type).first()
         investment_id = investmentId.investment_id
         print(investment_id)
         if not investment_id:
             return JsonResponse({"message":"Invalid investment type"}, status=400)
-        chama = Chamas.objects.get(name=f"Chama{chama}")
+        chama = Chamas.objects.get(chama_id=chama_id)
         if member:
-            contribution = investment_contribution(investment_id=investmentId, member_id=member, contribution_amount=contribution_amount, investment_duration=investment_duration)
+            contribution = investment_contribution(chama=chama, transactionRef=transactionRef, investment_id=investmentId, member_id=member, contribution_amount=contribution_amount, investment_duration=investment_duration)
             contribution.save()
-            transaction = Transactions(member=member, amount=contribution_amount, chama=chama, transaction_type="Contribution")
+            transaction = Transactions(transactionRef=transactionRef, member=member, amount=contribution_amount, chama=chama, transaction_type="Contribution")
             transaction.save()
             return JsonResponse({"message":f"Investment of Ksh.{contribution_amount} was successful","status":200})
         else:
