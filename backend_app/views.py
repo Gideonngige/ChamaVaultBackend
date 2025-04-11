@@ -473,7 +473,7 @@ def investment(request):
         print(f"{email} {chama_id} {contribution_amount} {investment_type} {investment_duration}")
        
 
-        member = Members.objects.get(email=email).first()
+        member = Members.objects.filter(email=email).first()
         print(member)
         investmentId = Investment.objects.filter(investment_type=investment_type).first()
         investment_id = investmentId.investment_id
