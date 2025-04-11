@@ -470,7 +470,7 @@ def investment(request):
         investment_type = data.get('investment_type')
         investment_duration = data.get('investment_duration')
 
-        print(f"{email} {chama}_id {contribution_amount} {investment_type} {investment_duration}")
+        print(f"{email} {chama_id} {contribution_amount} {investment_type} {investment_duration}")
        
 
         member = Members.objects.get(email=email).first()
