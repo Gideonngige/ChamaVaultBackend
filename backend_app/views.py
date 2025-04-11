@@ -466,7 +466,7 @@ def investment(request):
         chama_id = data.get('chama_id')
         phonenumber = data.get('phonenumber')
         transactionRef = data.get('transactionRef')
-        contribution_amount = data.get('contribution_amount')
+        contribution_amount = data.get('amount')
         investment_type = data.get('investment_type')
         investment_duration = data.get('investment_duration')
 
