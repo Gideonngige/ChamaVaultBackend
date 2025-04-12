@@ -76,13 +76,25 @@ def members(request, email, chama_id):
 @api_view(['GET'])
 def getMember(request, email, chama):
     try:
-        chama = Chamas.objects.get(name=chama)
-        member = Members.objects.get(chama=chama,email=email)
+        print("Chama received:", chama)
+
+        if chama.lower() == "null":
+            member = Members.objects.get(email=email)
+        else:
+            chama_obj = Chamas.objects.get(name=chama)
+            member = Members.objects.get(chama=chama_obj, email=email)
+
         serializer = MembersSerializer(member)
-        return JsonResponse(serializer.data)
+        return JsonResponse(serializer.data, safe=False)
+
     except Members.DoesNotExist:
-        return JsonResponse({"message":"Invalid email address"})
-#end of get member api
+        return JsonResponse({"message": "Member with this email does not exist."}, status=404)
+
+    except Chamas.DoesNotExist:
+        return JsonResponse({"message": f"Chama '{chama}' not found."}, status=404)
+
+    except Exception as e:
+        return JsonResponse({"message": "Something went wrong", "error": str(e)}, status=500)
 
 # start of count total chama members
 @api_view(['GET'])
@@ -590,24 +602,51 @@ def calculate_investment(request, member_id):
 
 
 #start of signin api
-def postsignIn(request, email, password, chama):
+def postsignIn(request, email, password, chama=None):
     try:
-        chama = Chamas.objects.get(name=chama)
-        user = authe.sign_in_with_email_and_password(email,password)
-        if Members.objects.filter(chama=chama, email=email).exists() and user:
-            session_id = user['idToken']
-            request.session['uid'] = str(session_id)
-            return JsonResponse({"message": "Successfully logged in"})
-        elif not Members.objects.filter(chama=chama, email=email).exists():
-            return JsonResponse({"message": f"No user found with this email found in {chama},please register"})
-        elif not user:
-            return JsonResponse({"message": "Invalid email"})
+        print("Chama received:", chama)
+
+        # Authenticate user via Firebase
+        user = authe.sign_in_with_email_and_password(email, password)
+        session_id = user['idToken']
+        request.session['uid'] = str(session_id)
+
+        # Handle case where chama is not provided or is "null"
+        if not chama or chama.lower() == "null":
+            if Members.objects.filter(email=email).exists():
+                print("Yes")
+                return JsonResponse({
+                    "message": "Successfully logged in",
+                    "has_chama": False
+                })
+            else:
+                return JsonResponse({
+                    "message": "Account found in Firebase, but not in the database. Please register.",
+                }, status=404)
+
+        # If chama is provided, validate it
+        try:
+            chama_obj = Chamas.objects.get(name=chama)
+        except Chamas.DoesNotExist:
+            return JsonResponse({"message": f"Chama '{chama}' does not exist"}, status=404)
+
+        if Members.objects.filter(chama=chama_obj, email=email).exists():
+            return JsonResponse({
+                "message": "Successfully logged in",
+                "has_chama": True
+            })
         else:
-            return JsonResponse({"message": "please register"})
-    except:
-        message = "Invalid Credentials!! Please Check your data"
-        return JsonResponse({"message": message})
-    
+            return JsonResponse({
+                "message": f"No user found in chama '{chama}' with this email.",
+            }, status=404)
+
+    except Exception as e:
+        print("Login error:", str(e))
+        return JsonResponse({
+            "message": "Invalid credentials. Please check your email and password.",
+            "error": str(e)
+        }, status=400)
+
     
 #end of signin api
 
@@ -625,43 +664,37 @@ def logout(request):
 @api_view(['POST'])
 def postsignUp(request):
     try:
-        data = json.loads(request.body)  # Convert request body to JSON
-        
+        data = json.loads(request.body)
+
         # Extract data
-        email = data.get("email")  # Define email first
-        chama_name = data.get("chama")
+        email = data.get("email")
         name = data.get("name")
         phone_number = data.get("phone_number")
         password = data.get("password")
 
-        # Check if email already exists
-        chama = Chamas.objects.get(name=chama_name)
-        if Members.objects.filter(email=email, chama=chama).exists():
-            return JsonResponse({"message": "You already have account in this chama"}, status=400)
-        # Check if chama exists
-        try:
-            chama = Chamas.objects.get(name=chama_name)
-        except Chamas.DoesNotExist:
-            return JsonResponse({"message": "Chama not found"}, status=400)
-        
-        
+        # Check if email already exists globally (regardless of chama)
         if Members.objects.filter(email=email).exists():
-            member = Members.objects.get(email=email)
-            member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=member.password)
-            member.save()
-        
-        else:
-            # Create user
-            user = authe.create_user_with_email_and_password(email, password)
-            uid = user['localId']
-            # Save member
-            member = Members(chama=chama, name=name, email=email, phone_number=phone_number, password=uid)
-            member.save()
+            return JsonResponse({"message": "An account with this email already exists"}, status=400)
+
+        # Create Firebase user
+        user = authe.create_user_with_email_and_password(email, password)
+        uid = user['localId']
+
+        # Save Member (without chama for now)
+        member = Members(
+            chama=None,
+            name=name,
+            email=email,
+            phone_number=phone_number,
+            password=uid, 
+            role="member"
+        )
+        member.save()
 
         return JsonResponse({"message": "Successfully registered"}, status=201)
 
     except Exception as e:
-        print("Error:", str(e))  # Log error for debugging
+        print("Error:", str(e))
         return JsonResponse({"message": "Registration failed", "error": str(e)}, status=500)
 #end of signUp api
 
@@ -952,3 +985,39 @@ def getmessages(request, chama_id):
     serializer = MessageSerializer(messages, many=True)
     return JsonResponse(serializer.data, safe=False)
 # end of get messages api
+
+# start of joinchama api
+@csrf_exempt
+def joinchama(request, member_id, chama_name):
+    try:
+        member = Members.objects.get(member_id=member_id)
+    except Members.DoesNotExist:
+        return JsonResponse({"message": "Member not found"}, status=404)
+
+    try:
+        chama = Chamas.objects.get(name=chama_name)
+    except Chamas.DoesNotExist:
+        return JsonResponse({"message": "Chama not registered"}, status=404)
+
+    # Check if member has no chama assigned
+    if member.chama is None:
+        member.chama = chama
+        member.save()
+        return JsonResponse({"message": f"You have successfully joined {chama_name}"})
+
+    # Check if the same member has not already joined this chama with a different record
+    elif not Members.objects.filter(phone_number=member.phone_number, chama=chama).exists():
+        new_member = Members(
+            chama=chama,
+            name=member.name,
+            email=member.email,
+            phone_number=member.phone_number,
+            password=member.password,
+            role="member"
+        )
+        new_member.save()
+        return JsonResponse({"message": f"You have successfully joined {chama_name}"})
+
+    else:
+        return JsonResponse({"message": "You already have an account in this chama"})
+# end of joinchama api

@@ -24,7 +24,7 @@ class Chamas(models.Model):
 
 class Members(models.Model):
     member_id = models.AutoField(primary_key=True)
-    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=200)
     email = models.EmailField(max_length=200)
     phone_number = models.CharField(max_length=15)
