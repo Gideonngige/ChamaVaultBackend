@@ -42,4 +42,6 @@ urlpatterns = [
     path('sendmessage/', views.sendmessage, name='sendmessage'),
     path('getmessages/<int:chama_id>/', views.getmessages, name='getmessages'),
     path('joinchama/<int:member_id>/<str:chama_name>/', views.joinchama, name='joinchama'),
+    path('updateprofile/', views.updateprofile, name='updateprofile'),
+     path('adminsendmessage/', views.adminsendmessage, name='adminsendmessage'),
 ]

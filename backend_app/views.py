@@ -1021,3 +1021,45 @@ def joinchama(request, member_id, chama_name):
     else:
         return JsonResponse({"message": "You already have an account in this chama"})
 # end of joinchama api
+
+# start of update profile api
+@csrf_exempt
+@api_view(['POST'])
+def updateprofile(request):
+    try:
+        data = json.loads(request.body) 
+        member_id = data.get('member_id')
+        name = data.get('name')
+        phone_number = data.get('phone_number')
+        member = Members.objects.get(member_id=member_id)
+        member.name = name
+        member.phone_number = phone_number
+        member.save()
+        return JsonResponse({"message":"ok"})
+
+    except Members.DoesNotExist:
+        return JsonResponse({"message": "Member not found"}, status=404)
+
+# end of update profile api
+
+# admn message api
+@api_view(['POST'])
+def adminsendmessage(request):
+    data = json.loads(request.body)
+    name = data.get('name')
+    chama_id = data.get('chama_id')
+    message = data.get('message')
+    try:
+        member_id = Members.objects.get(chama=chama_id,name=name)
+        chama = Chamas.objects.get(chama_id=chama_id)
+        Notifications.objects.create(
+            chama=chama,
+            member_id=member_id,
+            notification_type="alert",
+            notification=f"From Admin.\n{message}"
+            )
+        return JsonResponse({"message":"message sent successfully", "status":200})
+
+    except Members.DoesNotExist:
+        return JsonResponse({"message": "Member not found"}, status=404)
+# end admn message apo

@@ -4,7 +4,7 @@ from .models import Members,Loans, Notifications, Transactions, Chamas, Contribu
 class MembersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Members
-        fields = '__all__'
+        fields = ['name']
 
 class ChamasSerializer(serializers.ModelSerializer):
     class Meta:

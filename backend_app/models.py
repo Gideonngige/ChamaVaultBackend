@@ -20,7 +20,7 @@ class Chamas(models.Model):
 
 
     def __str__(self):
-        return self.name
+        return f"{self.chama_id} - {self.name}"
 
 class Members(models.Model):
     member_id = models.AutoField(primary_key=True)
