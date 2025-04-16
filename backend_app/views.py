@@ -23,8 +23,8 @@ from rest_framework.decorators import api_view
 from .models import Members, Chamas
 import uuid
 import africastalking
-import backend_app.firebase_admin_init
-from firebase_admin import auth as firebase_auth
+# import backend_app.firebase_admin_init
+# from firebase_admin import auth as firebase_auth
 # import pyrebase4 as pyrebase
 
 # Create your views here.
@@ -1072,8 +1072,8 @@ def adminsendmessage(request):
 def deletemember(request, member_id):
     try:
         member = Members.objects.get(member_id=member_id)
-        if member.password:
-            firebase_auth.delete_user(member.password)
+        # if member.password:
+        #     firebase_auth.delete_user(member.password)
         member.delete()
         return JsonResponse({'message': 'Member deleted successfully'})
     except Members.DoesNotExist:
