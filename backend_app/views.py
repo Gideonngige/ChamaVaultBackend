@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message
@@ -23,6 +23,8 @@ from rest_framework.decorators import api_view
 from .models import Members, Chamas
 import uuid
 import africastalking
+import backend_app.firebase_admin_init
+from firebase_admin import auth as firebase_auth
 # import pyrebase4 as pyrebase
 
 # Create your views here.
@@ -62,7 +64,7 @@ def members(request, email, chama_id):
             member = Members.objects.filter(chama=chama_id,email=email)
             if member:
                 members = Members.objects.filter(chama=chama_id)
-                serializer = MembersSerializer(members, many=True)
+                serializer = MembersSerializer2(members, many=True)
                 return Response(serializer.data)
             else:
                 return Response({"message":"Please signin"})
@@ -988,6 +990,7 @@ def getmessages(request, chama_id):
 
 # start of joinchama api
 @csrf_exempt
+@api_view(['GET'])
 def joinchama(request, member_id, chama_name):
     try:
         member = Members.objects.get(member_id=member_id)
@@ -1046,15 +1049,15 @@ def updateprofile(request):
 @api_view(['POST'])
 def adminsendmessage(request):
     data = json.loads(request.body)
-    name = data.get('name')
+    member_id = data.get('member_id')
     chama_id = data.get('chama_id')
     message = data.get('message')
     try:
-        member_id = Members.objects.get(chama=chama_id,name=name)
+        member_id2 = Members.objects.get(member_id=member_id,chama=chama_id)
         chama = Chamas.objects.get(chama_id=chama_id)
         Notifications.objects.create(
             chama=chama,
-            member_id=member_id,
+            member_id=member_id2,
             notification_type="alert",
             notification=f"From Admin.\n{message}"
             )
@@ -1063,3 +1066,16 @@ def adminsendmessage(request):
     except Members.DoesNotExist:
         return JsonResponse({"message": "Member not found"}, status=404)
 # end admn message apo
+
+# delete member api
+
+def deletemember(request, member_id):
+    try:
+        member = Members.objects.get(member_id=member_id)
+        if member.password:
+            firebase_auth.delete_user(member.password)
+        member.delete()
+        return JsonResponse({'message': 'Member deleted successfully'})
+    except Members.DoesNotExist:
+        return JsonResponse({'error': 'Member not found'}, status=404)
+# end of delete member api
