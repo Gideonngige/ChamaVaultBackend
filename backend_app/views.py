@@ -23,6 +23,8 @@ from rest_framework.decorators import api_view
 from .models import Members, Chamas
 import uuid
 import africastalking
+from decimal import Decimal
+from django.db.models import Sum
 # import backend_app.firebase_admin_init
 # from firebase_admin import auth as firebase_auth
 # import pyrebase4 as pyrebase
@@ -246,8 +248,6 @@ def transactions(request, transaction_type, email, chama_id):
 #start of loans api
 
 #function to calculate amount of loan allowed
-from decimal import Decimal
-from django.db.models import Sum
 
 def check_loan(email):
     try:
