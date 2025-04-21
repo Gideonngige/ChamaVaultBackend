@@ -363,7 +363,7 @@ def getAllLoans(request, role):
             loans = LoanApproval.objects.filter(chairperson_approval="pending")
             loan_ids = loans.values_list('loan_id', flat=True)
             print(list(loan_ids))  
-            loans = Loans.objects.filter(loan_id__in=loan_ids)
+            loans = Loans.objects.filter(loan_id__in=loan_ids, loan_type="LTL")
             serializer = LoansSerializer(loans, many=True)
             return JsonResponse(serializer.data, safe=False)
         elif role == "treasurer":
