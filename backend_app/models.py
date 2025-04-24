@@ -58,6 +58,7 @@ class Loans(models.Model):
     name = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='loanee_name', default=5)
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    repayment_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     LOAN_TYPES = [
         ('LTL', 'Long Term Loan'),
         ('STL', 'Short Term Loan'),
@@ -66,6 +67,7 @@ class Loans(models.Model):
         ('paid','paid'),
         ('pending','pending'),
     ]
+    loan_status = models.CharField(max_length=20, choices=LOAN_STATUS, default='pending')
     loan_type = models.CharField(max_length=20, choices=LOAN_TYPES, default='LTL')
     loan_date = models.DateTimeField(auto_now_add=True)
     loan_deadline = models.DateTimeField(validators=[validate_date])

@@ -249,64 +249,58 @@ def transactions(request, transaction_type, email, chama_id):
 
 #function to calculate amount of loan allowed
 
-def check_loan(email):
-    try:
-        member = Members.objects.filter(email=email).first()
-    except Members.DoesNotExist:
-        return "Member not found"
-
-    total_amount = Loans.objects.filter(name=member).aggregate(Sum('amount'))['amount__sum'] or 0
-    max_amount = 10000  # Maximum loan amount
-    
-    if total_amount == 0:
-        return max_amount  # If no loan exists, they can get the full amount
-    
-    elif total_amount > max_amount:
-        return 500  # Fixed loan amount if they exceed max
-
-    else:
-        return float(total_amount) * 0.5  # Half of their current loan balance
-
+def calc_repayment_amount(amount, months, loan_type):
+    if loan_type == "LTL":
+        interest = amount * 0.1 * months / 12
+        repayment_amount =amount +  interest
+        return repayment_amount
+    elif loan_type == "STL":
+        interest = amount * 0.3 * months / 12
+        repayment_amount = amount + interest
+        return repayment_amount
+   
 #end of calculate function
 
 
 africastalking.initialize(username='sandbox', api_key='atsk_35b2da862cc85124c522aec60fa8eedde173fc50f9fb9e0645ca97e6252f2c535930259b')
 sms = africastalking.SMS
 @api_view(['GET'])
-def loans(request, email, chama_id, amount, loan_type, period):
+def loans(request, email, chama_id, amount, loan_type):
     try:
         member = Members.objects.filter(email=email).first()
         chama = Chamas.objects.get(chama_id=chama_id)
         print(member)
         print(chama)
+        if loan_type == "LTL":
+            period = 360
+        elif loan_type == "STL":
+            period = 90
+
         loan_deadline=timezone.now() + timedelta(days=period)
         print(loan_deadline)
-        check = check_loan(email)
-        print(check)
-        if check == 500:
-            loan = Loans(name=member, chama=chama, amount=check, loan_type=loan_type, loan_deadline=loan_deadline)
+
+        months = period / 30
+        repayment_amount = calc_repayment_amount(amount, months, loan_type)
+        if loan_type == "LTL":
+            loan = Loans(name=member, chama=chama, amount=amount, repayment_amount=repayment_amount, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
             loan.save()
             transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
             transaction.save()
 
-            loan_id = Loans.objects.get(name=member, chama=chama, amount=amount, loan_type=loan_type, loan_deadline=loan_deadline)
+            loan_id = Loans.objects.get(name=member, chama=chama, amount=amount, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
             approval = LoanApproval(loan_id=loan_id, chairperson_approval="pending", treasurer_approval="pending", secretary_approval="pending")
             approval.save()
 
             response = sms.send("Hello", ["+254797655727"])
             print(response)
 
-            return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful","status":200})
+            return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successfully. Wait as the team verify it.","status":200})
 
-        elif check > 0:
-            loan = Loans(name=member,chama=chama, amount=amount, loan_type=loan_type, loan_deadline=loan_deadline)
+        elif loan_type == "STL":
+            loan = Loans(name=member,chama=chama, amount=amount, repayment_amount=repayment_amount, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
             loan.save()
             transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
             transaction.save()
-
-            loan_id = Loans.objects.get(name=member, chama=chama, amount=amount, loan_type=loan_type, loan_deadline=loan_deadline)
-            approval = LoanApproval(loan_id=loan_id, chairperson_approval="pending", treasurer_approval="pending", secretary_approval="pending")
-            approval.save()
 
             # response = sms.send("Hello", ["07123456789"], sender_id="Chamavault")
             response = sms.send("Hello", ["+254797655727"])
@@ -314,7 +308,7 @@ def loans(request, email, chama_id, amount, loan_type, period):
 
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful","status":200})
         else:
-            return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} exceeds the maximum loan limit"})
+            return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was not successful","status":400})
         
     except Members.DoesNotExist:
         return Response({"message":"Invalid email address"})
@@ -332,9 +326,16 @@ def getLoans(request, chama_id, email):
         member = Members.objects.filter(email=email).first()
         if member:
             chama = Chamas.objects.get(chama_id=chama_id)
-            total_loan = Loans.objects.filter(name=member,chama=chama).aggregate(total=Sum('amount'))['total'] or 0.00
-            loan_date = list(Loans.objects.filter(name=member, chama=chama).values('loan_date'))
-            return JsonResponse({"total_loan": total_loan,"loan_date":loan_date, "interest":9.5}, safe=False)
+            total_loan = Loans.objects.filter(name=member,chama=chama, loan_status="pending").aggregate(total=Sum('amount'))['total'] or 0.00
+            total_stl_loan = Loans.objects.filter(name=member,chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('amount'))['total'] or 0.00
+            total_stl_repayment = Loans.objects.filter(name=member,chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00
+            total_ltl_loan = Loans.objects.filter(name=member,chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('amount'))['total'] or 0.00
+            total_ltl_repayment = Loans.objects.filter(name=member,chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00
+            stl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_date'))
+            stl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_deadline'))
+            ltl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL").values('loan_date'))
+            ltl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_deadline'))
+            return JsonResponse({"total_loan": total_loan,"total_stl_loan":total_stl_loan, "total_ltl_loan":total_ltl_loan,"total_stl_repayment":total_stl_repayment,"total_ltl_repayment":total_ltl_repayment, "stl_loan_date":stl_loan_date, "stl_loan_deadline":stl_loan_deadline, "ltl_loan_date":ltl_loan_date, "ltl_loan_deadline":ltl_loan_deadline}, safe=False)
 
         else:
             return JsonResponse({"message":"No loans found"})
