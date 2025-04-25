@@ -203,6 +203,7 @@ def payloan(request):
         data = json.loads(request.body) 
         email = data.get('email')
         amount = data.get('amount')
+        loan_type = data.get('loan_type')
         phonenumber = data.get('phonenumber')
         chama_id = data.get('chama_id')
         transactionRef = data.get('transactionRef')
@@ -212,7 +213,7 @@ def payloan(request):
         chama = Chamas.objects.get(chama_id=chama_id)
         print(chama)
         if member:
-            repayment = LoanRepayment(transactionRef=transactionRef, chama=chama, member=member, amount=amount)
+            repayment = LoanRepayment(transactionRef=transactionRef, chama=chama, member=member, amount=amount,loan_type=loan_type)
             repayment.save()
             transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Loan repayment")
             transaction.save()
@@ -350,8 +351,20 @@ def getloanrepayment(request, chamaname, member_id):
     member = Members.objects.filter(member_id=member_id, chama=chama_name).first()
     print(member)
     if member:
-        total_repayment = LoanRepayment.objects.filter(chama=chama_name, member=member).aggregate(total=Sum('amount'))['total'] or 0.00
-        return JsonResponse({"total_repayment":total_repayment})
+        total_stl_repayment = LoanRepayment.objects.filter(chama=chama_name, member=member, loan_type="STL").aggregate(total=Sum('amount'))['total'] or 0.00
+        total_ltl_repayment = LoanRepayment.objects.filter(chama=chama_name, member=member, loan_type="LTL").aggregate(total=Sum('amount'))['total'] or 0.00
+
+        total_stl_loan = Loans.objects.filter(name=member,chama=chama_name, loan_status="pending", loan_type="STL").aggregate(total=Sum('amount'))['total'] or 0.00
+        total_ltl_loan = Loans.objects.filter(name=member,chama=chama_name, loan_status="pending", loan_type="LTL").aggregate(total=Sum('amount'))['total'] or 0.00
+
+        if total_stl_repayment >= total_stl_loan:
+            stl_loan = Loans.objects.filter(name=member, chama=chama_name, loan_type="STL")
+            stl_loan.loan_status = "paid"
+        if total_ltl_repayment >= total_ltl_loan:
+            ltl_loan = Loans.objects.filter(name=member, chama=chama_name, loan_type="LTL")
+            ltl_loan.loan_status = "paid"
+
+        return JsonResponse({"total_stl_repayment":total_stl_repayment, "total_ltl_repayment":total_ltl_repayment})
     else:
         return JsonResponse({"message":"Please login"})
 # end of get loan repayment for specific member

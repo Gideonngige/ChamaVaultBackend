@@ -100,6 +100,11 @@ class LoanRepayment(models.Model):
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
     member = models.ForeignKey(Members, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    LOAN_TYPES = [
+        ('LTL', 'Long Term Loan'),
+        ('STL', 'Short Term Loan'),
+    ]
+    loan_type = models.CharField(max_length=20, choices=LOAN_TYPES, default='STL')
     penality = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     payment_date = models.DateTimeField(auto_now_add=True)
 
