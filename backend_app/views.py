@@ -1103,10 +1103,14 @@ def update_location(request):
     member = Members.objects.get(member_id=member_id)
     latitude = data['latitude']
     longitude = data['longitude']
-    location, created = MembersLocation.objects.get_or_create(member=member, name=name, latitude=latitude, longitude=longitude)
-    location.latitude = data['latitude']
-    location.longitude = data['longitude']
-    location.save()
+    created = MembersLocation.objects.filter(member=member, name=name).exists()
+    if created:
+        created.latitude = data['latitude']
+        created.longitude = data['longitude']
+        created.save()
+    else:
+        created = MembersLocation.objects.create(member=member, name=name, latitude=latitude, longitude=longitude)
+
     return Response({'status': 'location updated'})
 
 @api_view(['GET'])
