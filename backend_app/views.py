@@ -1105,8 +1105,8 @@ def update_location(request):
     longitude = data['longitude']
     created = MembersLocation.objects.filter(member=member, name=name).exists()
     if created:
-        created.latitude = data['latitude']
-        created.longitude = data['longitude']
+        created.latitude = latitude
+        created.longitude = longitude
         created.save()
     else:
         created = MembersLocation.objects.create(member=member, name=name, latitude=latitude, longitude=longitude)
