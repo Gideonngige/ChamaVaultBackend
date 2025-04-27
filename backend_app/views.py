@@ -6,7 +6,7 @@ from django.utils import timezone
 from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MemberLocation
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation
 from django.db.models import Sum
 import pyrebase
 import json
@@ -1103,7 +1103,7 @@ def update_location(request):
     member = Members.objects.get(member_id=member_id)
     latitude = data['latitude']
     longitude = data['longitude']
-    location, created = MemberLocation.objects.get_or_create(member=member, name=name, latitude=latitude, longitude=longitude)
+    location, created = MembersLocation.objects.get_or_create(member=member, name=name, latitude=latitude, longitude=longitude)
     location.latitude = data['latitude']
     location.longitude = data['longitude']
     location.save()
@@ -1111,6 +1111,6 @@ def update_location(request):
 
 @api_view(['GET'])
 def get_all_locations(request):
-    locations = MemberLocation.objects.all()
+    locations = MembersLocation.objects.all()
     serializer = MemberLocationSerializer(locations, many=True)
     return Response(serializer.data)
