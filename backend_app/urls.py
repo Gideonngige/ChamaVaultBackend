@@ -45,4 +45,6 @@ urlpatterns = [
     path('updateprofile/', views.updateprofile, name='updateprofile'),
     path('adminsendmessage/', views.adminsendmessage, name='adminsendmessage'),
     path('deletemember/<int:member_id>/', views.deletemember, name='deletemember'),
+    path('update_location/', views.update_location, name='update_location'),
+    path('get_all_locations/', views.get_all_locations, name='get_all_locations'),
 ]

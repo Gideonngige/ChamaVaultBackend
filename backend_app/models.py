@@ -41,6 +41,13 @@ class Members(models.Model):
     def __str__(self):
         return f"{self.member_id} - {self.name}"
 
+class MemberLocation(models.Model):
+    member = models.ForeignKey(Members, on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    updated_at = models.DateTimeField(auto_now=True)
+
 class Contributions(models.Model):
     contribution_id = models.AutoField(primary_key=True)
     transactionRef = models.CharField(max_length=50, default="T073397058487061")

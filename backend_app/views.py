@@ -3,10 +3,10 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MemberLocation
 from django.db.models import Sum
 import pyrebase
 import json
@@ -1093,3 +1093,24 @@ def deletemember(request, member_id):
     except Members.DoesNotExist:
         return JsonResponse({'error': 'Member not found'}, status=404)
 # end of delete member api
+
+
+@api_view(['POST'])
+def update_location(request):
+    data = request.data
+    member_id = data['member_id']
+    name = data['name']
+    member = Members.objects.get(member_id=member_id)
+    latitude = data['latitude']
+    longitude = data['longitude']
+    location, created = MemberLocation.objects.get_or_create(member=member, name=name, latitude=latitude, longitude=longitude)
+    location.latitude = data['latitude']
+    location.longitude = data['longitude']
+    location.save()
+    return Response({'status': 'location updated'})
+
+@api_view(['GET'])
+def get_all_locations(request):
+    locations = MemberLocation.objects.all()
+    serializer = MemberLocationSerializer(locations, many=True)
+    return Response(serializer.data)
