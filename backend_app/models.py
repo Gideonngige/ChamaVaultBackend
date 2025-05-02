@@ -61,6 +61,14 @@ class Contributions(models.Model):
     def __str__(self):
         return f"{self.member} - {self.amount}"
 
+class ContributionDate(models.Model):
+    contribution_date_id = models.AutoField(primary_key=True)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
+    contribution_date = models.DateTimeField(default=now)
+
+    def __str__(self):
+        return f"{self.chama} - {self.contribution_date}"
+
 class Loans(models.Model):
     loan_id = models.AutoField(primary_key=True)
     name = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='loanee_name', default=5)

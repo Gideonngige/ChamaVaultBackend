@@ -6,7 +6,7 @@ from django.utils import timezone
 from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation, ContributionDate
 from django.db.models import Sum
 import pyrebase
 import json
@@ -1118,3 +1118,20 @@ def get_all_locations(request):
     locations = MembersLocation.objects.all()
     serializer = MemberLocationSerializer(locations, many=True)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+def contributiondate(request):
+    try:
+        data = json.loads(request.body)
+        contribution_date = data.get('date')
+        chama_id = data.get('chama_id')
+
+        chama = Chamas.objects.get(chama_id=chama_id)
+        contribution_date_obj = ContributionDate.objects.create(chama=chama, contribution_date=contribution_date)
+        contribution_date_obj.save()
+        return JsonResponse({"message": "Contribution date set successfully"}, status=201)
+    except Chamas.DoesNotExist:
+        return JsonResponse({"message": "Chama not found"}, status=404)
+    
+    
