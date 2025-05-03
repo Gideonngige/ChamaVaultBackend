@@ -48,4 +48,5 @@ urlpatterns = [
     path('update_location/', views.update_location, name='update_location'),
     path('get_all_locations/', views.get_all_locations, name='get_all_locations'),
     path('contributiondate/', views.contributiondate, name='contributiondate'),
+    path('send_reminder_message/<int:chama_id>/', views.send_reminder_message, name='send_reminder_message'),
 ]

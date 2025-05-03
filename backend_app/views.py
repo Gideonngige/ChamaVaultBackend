@@ -25,6 +25,8 @@ import uuid
 import africastalking
 from decimal import Decimal
 from django.db.models import Sum
+from datetime import date
+from django.db.models import Q
 # import backend_app.firebase_admin_init
 # from firebase_admin import auth as firebase_auth
 # import pyrebase4 as pyrebase
@@ -455,7 +457,8 @@ def confirm_loan(request, loan_id, loanee_id, approver_email, status, chama_id):
 def get_notifications(request, email, chama_id):
     try:
         member_id = Members.objects.filter(email=email, chama=chama_id).first()
-        notifications = Notifications.objects.filter(chama=chama_id, member_id=member_id).order_by('-notification_date')
+        notifications = Notifications.objects.filter(Q(chama=chama_id),
+        Q(member_id=member_id) | Q(member_id__isnull=True)).order_by('-notification_date')
         serializer = NotificationsSerializer(notifications, many=True)
         return JsonResponse(serializer.data, safe=False)
     except Notifications.DoesNotExist:
@@ -1120,6 +1123,7 @@ def get_all_locations(request):
     return Response(serializer.data)
 
 
+# contribution date api
 @api_view(['POST'])
 def contributiondate(request):
     try:
@@ -1134,4 +1138,36 @@ def contributiondate(request):
     except Chamas.DoesNotExist:
         return JsonResponse({"message": "Chama not found"}, status=404)
     
-    
+# end of contribution date api
+
+# send reminder message api
+@api_view(['GET'])
+def send_reminder_message(request, chama_id):
+    try:
+        chama = Chamas.objects.get(chama_id=chama_id)
+        contribution_date_obj = ContributionDate.objects.filter(chama=chama_id).order_by('-contribution_date').first()
+
+        if not contribution_date_obj:
+            return JsonResponse({"message": "No contribution date found"}, status=404)
+
+        contribution_date = contribution_date_obj.contribution_date
+        today = date.today()
+        message = f"Reminder: Contribution date is {contribution_date}"
+
+        # Check if this notification already exists
+        if Notifications.objects.filter(chama=chama, notification__icontains=message).exists():
+            return JsonResponse({"message": "Notification already sent"}, status=200)
+
+        # Only send if date is today or in future (optional)
+        if contribution_date.date() >= today:
+            Notifications.objects.create(
+                chama=chama,
+                notification_type="alert",
+                notification=f"Reminder.\n{message}"
+            )
+
+        return JsonResponse({"message": "ok"}, status=200)
+
+    except Chamas.DoesNotExist:
+        return JsonResponse({"message": "Chama not found"}, status=404)
+# end of send reminder message api

@@ -150,7 +150,7 @@ class Transactions(models.Model):
 
 class Notifications(models.Model):
     notification_id = models.AutoField(primary_key=True)
-    member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
+    member_id = models.ForeignKey(Members, on_delete=models.CASCADE, null=True, blank=True)
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
     NOTIFICATION_TYPES = [
         ('alert', 'Alert'),
