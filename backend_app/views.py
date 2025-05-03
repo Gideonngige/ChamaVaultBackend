@@ -296,6 +296,12 @@ def loans(request, email, chama_id, amount, loan_type):
 
             response = sms.send("Hello", ["+254797655727"])
             print(response)
+            Notifications.objects.create(
+                member_id=member,
+                chama=chama,
+                notification_type="alert",
+                notification=f"Your loan request of KES.{amount} has been sent for approval"
+            )
 
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successfully. Wait as the team verify it.","status":200})
 
@@ -308,6 +314,12 @@ def loans(request, email, chama_id, amount, loan_type):
             # response = sms.send("Hello", ["07123456789"], sender_id="Chamavault")
             response = sms.send("Hello", ["+254797655727"])
             print(response)
+            Notifications.objects.create(
+                member_id=member,
+                chama=chama,
+                notification_type="alert",
+                notification=f"Your loan request of KES.{amount} has been sent for approval"
+            )
 
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successful","status":200})
         else:
