@@ -55,7 +55,6 @@ class Contributions(models.Model):
     member = models.ForeignKey(Members, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
-    penality = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     contribution_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -68,6 +67,14 @@ class ContributionDate(models.Model):
 
     def __str__(self):
         return f"{self.chama} - {self.contribution_date}"
+
+class Penalty(models.Model):
+    penalty_id = models.AutoField(primary_key=True)
+    contribution = models.ForeignKey(Contributions, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    penalty_date = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.contribution} - {self.amount}"
 
 class Loans(models.Model):
     loan_id = models.AutoField(primary_key=True)
