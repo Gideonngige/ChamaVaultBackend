@@ -49,5 +49,4 @@ urlpatterns = [
     path('get_all_locations/', views.get_all_locations, name='get_all_locations'),
     path('contributiondate/', views.contributiondate, name='contributiondate'),
     path('send_reminder_message/<int:chama_id>/', views.send_reminder_message, name='send_reminder_message'),
-    path('calculate_penalty/<int:member_id>/<int:chama_id>/', views.calculate_penalty, name='calculate_penalty'),
 ]
