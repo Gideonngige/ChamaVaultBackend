@@ -1172,7 +1172,7 @@ def send_reminder_message(request, chama_id):
 
         contribution_date = contribution_date_obj.contribution_date
         today = date.today()
-        message = f"Reminder: Contribution date is {contribution_date.strftime("%A, %B %d, %Y")}"
+        message = f"Reminder: Contribution date is {contribution_date.strftime('%A, %B %d, %Y')}"
 
         # Check if this notification already exists
         print("Contribution date:", contribution_date.date())
