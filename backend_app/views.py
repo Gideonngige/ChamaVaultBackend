@@ -498,7 +498,7 @@ def getContributions(request, chama_id, email):
             total_contributions = Contributions.objects.filter(member=member, chama=chama_id).aggregate(total=Sum('amount'))['total'] or 0.00
             penalty = Contributions.objects.filter(member=member, chama=chama_id).aggregate(Sum('penality'))['penality__sum'] or 0.00
             saving_date = list(Contributions.objects.filter(member=member, chama=chama_id).values('contribution_date'))
-            return JsonResponse({"total_contributions": total_contributions,"saving_date":saving_date, "interest":9.5, "penalty":penalty}, safe=False)
+            return JsonResponse({"total_contributions": total_contributions,"saving_date":saving_date, "interest":10, "penalty":penalty}, safe=False)
 
         else:
             return JsonResponse({"message":"No Contributions found"})
@@ -1172,18 +1172,26 @@ def send_reminder_message(request, chama_id):
 
         contribution_date = contribution_date_obj.contribution_date
         today = date.today()
-        message = f"Reminder: Contribution date is {contribution_date}"
+        message = f"Reminder: Contribution date is {contribution_date.strftime("%A, %B %d, %Y")}"
 
         # Check if this notification already exists
+        print("Contribution date:", contribution_date.date())
+        print("Today's date:", today)
         if Notifications.objects.filter(chama=chama, notification__icontains=message).exists():
             return JsonResponse({"message": "Notification already sent"}, status=200)
 
         # Only send if date is today or in future (optional)
-        if contribution_date.date() >= today:
+        if contribution_date.date() > today:
             Notifications.objects.create(
                 chama=chama,
                 notification_type="alert",
                 notification=f"Reminder.\n{message}"
+            )
+        if contribution_date.date() == today:
+            Notifications.objects.create(
+                chama=chama,
+                notification_type="alert",
+                notification=f"Reminder.Today is the contribution date.Please make your contribution. Thank you."
             )
 
         return JsonResponse({"message": "ok"}, status=200)
@@ -1191,3 +1199,74 @@ def send_reminder_message(request, chama_id):
     except Chamas.DoesNotExist:
         return JsonResponse({"message": "Chama not found"}, status=404)
 # end of send reminder message api
+
+# calculate penalty api
+@api_view(['GET'])
+def calculate_penalty(request, member_id, chama_id):
+    try:
+        member = Members.objects.get(member_id=member_id)
+        chama = Chamas.objects.get(chama_id=chama_id)
+
+        # Get latest contribution date for this chama
+        contribution_date_obj = ContributionDate.objects.filter(chama=chama).order_by('-contribution_date').first()
+
+        if not contribution_date_obj:
+            return JsonResponse({"message": "No contribution date found"}, status=404)
+
+        contribution_date = contribution_date_obj.contribution_date
+        today = date.today()
+
+        # Only penalize if today is past the contribution date
+        if today > contribution_date.date():
+            # Check if a contribution was made on the expected date
+            contribution = Contributions.objects.filter(
+                member=member,
+                chama=chama,
+                contribution_date=contribution_date
+            ).first()
+
+            if contribution:
+                # Contribution exists, no penalty
+                return JsonResponse({"message": "Member has already contributed"}, status=200)
+
+            else:
+                # Contribution not made, apply penalty
+                days_late = (today - contribution_date.date()).days
+                penalty_amount = days_late * 50
+
+                # Check if a late entry already exists to update penalty
+                existing_penalty = Contributions.objects.filter(
+                    member=member,
+                    chama=chama,
+                    contribution_date=contribution_date
+                ).first()
+
+                if existing_penalty:
+                    existing_penalty.penalty += penalty_amount
+                    existing_penalty.save()
+                else:
+                    # Create a penalty record (or partial contribution with zero amount)
+                    Contributions.objects.create(
+                        member=member,
+                        amount=0,  # if no contribution was made
+                        chama=chama,
+                        penality=penalty_amount,
+                        contribution_date=contribution_date,
+                    )
+
+                return JsonResponse({
+                    "message": "Penalty applied",
+                    "penalty_amount": penalty_amount,
+                    "days_late": days_late
+                }, status=200)
+
+        else:
+            return JsonResponse({"message": "Contribution date has not passed yet"}, status=200)
+
+    except Members.DoesNotExist:
+        return JsonResponse({"message": "Member not found"}, status=404)
+    except Chamas.DoesNotExist:
+        return JsonResponse({"message": "Chama not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+# end of calculate penalty api
