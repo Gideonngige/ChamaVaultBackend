@@ -200,7 +200,7 @@ def contributions(request):
 
                 # If today is past the contribution date, apply a penalty of 10% of the amount
                 penalty_amount = amount * 0.1
-                penalty = Penalty(contribution=contribution, amount=penalty_amount, penality_date=contribution_date_obj)
+                penalty = Penalty(contribution=contribution, amount=penalty_amount, penalty_date=contribution_date_obj)
                 penalty.save()
                 print("Penalty applied:", penalty_amount)
 
