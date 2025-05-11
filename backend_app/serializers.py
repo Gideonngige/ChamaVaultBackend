@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Members,Loans, Notifications, Transactions, Chamas, Contributions,Message, MembersLocation
+from .models import Members,Loans, Notifications, Transactions, Chamas, Contributions,Message, MembersLocation, Defaulters
 
 class MembersSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,3 +52,11 @@ class MemberLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = MembersLocation
         fields = ['location_id','member','name', 'latitude', 'longitude', 'updated_at']
+
+class DefaultersSerializer(serializers.ModelSerializer):
+    member_name = serializers.CharField(source='member.name')
+    phone_number = serializers.CharField(source='member.phone_number')
+
+    class Meta:
+        model = Defaulters
+        fields = ['member_name', 'phone_number', 'status']

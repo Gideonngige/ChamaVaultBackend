@@ -76,6 +76,18 @@ class Penalty(models.Model):
     def __str__(self):
         return f"{self.contribution} - {self.amount}"
 
+class Defaulters(models.Model):
+    defaulter_id = models.AutoField(primary_key=True)
+    member = models.ForeignKey(Members, on_delete=models.CASCADE)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
+    STATUS = [
+        ('active','active'),
+        ('inactive','inactive'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS, default='active')
+    def __str__(self):
+        return f"{self.member} - {self.chama} - {self.status}"
+
 class Loans(models.Model):
     loan_id = models.AutoField(primary_key=True)
     name = models.ForeignKey(Members, on_delete=models.CASCADE, related_name='loanee_name', default=5)

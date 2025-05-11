@@ -1,12 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation, ContributionDate, Penalty
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation, ContributionDate, Penalty, Defaulters
 from django.db.models import Sum
 import pyrebase
 import json
@@ -1232,3 +1232,66 @@ def send_reminder_message(request, chama_id):
     except Chamas.DoesNotExist:
         return JsonResponse({"message": "Chama not found"}, status=404)
 # end of send reminder message api
+
+# function to find defaulter
+
+def defaulters(request, member_id, chama_id):
+    member = get_object_or_404(Members, member_id=member_id)
+    chama = get_object_or_404(Chamas, chama_id=chama_id)
+
+    # Get the latest contribution date for the chama
+    contribution_date_obj = ContributionDate.objects.filter(chama=chama).order_by('-contribution_date').first()
+    if not contribution_date_obj:
+        return JsonResponse({"message": "No contribution date found"}, status=404)
+
+    contribution_date = contribution_date_obj.contribution_date
+
+    # Only proceed if today's date is past the contribution date
+    if date.today() <= contribution_date.date():
+        return JsonResponse({"message": "It's not past the contribution deadline yet."}, status=200)
+
+    # Check if the member has made a contribution by the due date
+    has_contributed = Contributions.objects.filter(
+        chama=chama,
+        member=member,
+        contribution_date__lte=contribution_date
+    ).exists()
+
+    if has_contributed:
+        return JsonResponse({"message": "Member has made a contribution"}, status=200)
+
+    # Check if defaulter record already exists
+    defaulter_exists = Defaulters.objects.filter(
+        member=member,
+        chama=chama,
+        status="active"
+    ).exists()
+
+    if defaulter_exists:
+        return JsonResponse({"message": "Defaulter record already exists"}, status=200)
+
+    # Create new defaulter
+    Defaulters.objects.create(
+        member=member,
+        chama=chama,
+        status="active"
+    )
+    return JsonResponse({"message": "Defaulter record created"}, status=201)
+
+# end of function to find defaulters
+
+# function to get defaulters
+def get_defaulters(request, chama_id):
+    try:
+        chama = get_object_or_404(Chamas, chama_id=chama_id)
+        defaulters = Defaulters.objects.filter(chama=chama, status="active")
+
+        if not defaulters.exists():
+            return JsonResponse({"message": "No defaulters found"}, status=404)
+
+        serializer = DefaultersSerializer(defaulters, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+# end of function to get defaulters
