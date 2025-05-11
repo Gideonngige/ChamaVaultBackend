@@ -54,9 +54,10 @@ class MemberLocationSerializer(serializers.ModelSerializer):
         fields = ['location_id','member','name', 'latitude', 'longitude', 'updated_at']
 
 class DefaultersSerializer(serializers.ModelSerializer):
+    member_id = serializers.CharField(source='member.member_id')
     member_name = serializers.CharField(source='member.name')
     phone_number = serializers.CharField(source='member.phone_number')
 
     class Meta:
         model = Defaulters
-        fields = ['member_name', 'phone_number', 'status']
+        fields = ['member_id','member_name', 'phone_number', 'status']
