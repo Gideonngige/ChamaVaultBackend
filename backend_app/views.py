@@ -1295,3 +1295,54 @@ def get_defaulters(request, chama_id):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 # end of function to get defaulters
+
+# start of function to change roles
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Members, Chamas  # Adjust the import based on your project structure
+
+def changeroles(request, chama_id, chairperson_id, treasurer_id, secretary_id):
+    chama = get_object_or_404(Chamas, chama_id=chama_id)
+
+    # CHAIRPERSON
+    if chairperson_id != 0:
+        try:
+            new_member = Members.objects.get(chama=chama, member_id=chairperson_id)
+            old_member = Members.objects.filter(chama=chama, role="chairperson").first()
+            if old_member:
+                old_member.role = "member"
+                old_member.save()
+            new_member.role = "chairperson"
+            new_member.save()
+        except Members.DoesNotExist:
+            return JsonResponse({"error": "Chairperson member not found"}, status=404)
+
+    # TREASURER
+    if treasurer_id != 0:
+        try:
+            new_member = Members.objects.get(chama=chama, member_id=treasurer_id)
+            old_member = Members.objects.filter(chama=chama, role="treasurer").first()
+            if old_member:
+                old_member.role = "member"
+                old_member.save()
+            new_member.role = "treasurer"
+            new_member.save()
+        except Members.DoesNotExist:
+            return JsonResponse({"error": "Treasurer member not found"}, status=404)
+
+    # SECRETARY
+    if secretary_id != 0:
+        try:
+            new_member = Members.objects.get(chama=chama, member_id=secretary_id)
+            old_member = Members.objects.filter(chama=chama, role="secretary").first()
+            if old_member:
+                old_member.role = "member"
+                old_member.save()
+            new_member.role = "secretary"
+            new_member.save()
+        except Members.DoesNotExist:
+            return JsonResponse({"error": "Secretary member not found"}, status=404)
+
+    return JsonResponse({"message": "Roles updated successfully"}, status=200)
+
+# end of function to change roles
