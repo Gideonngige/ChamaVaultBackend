@@ -4,8 +4,9 @@ from django.http import HttpResponse, JsonResponse
 from datetime import timedelta
 from django.utils import timezone
 from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation, ContributionDate, Penalty, Defaulters
 from django.db.models import Sum
 import pyrebase
@@ -27,6 +28,7 @@ from decimal import Decimal
 from django.db.models import Sum
 from datetime import date
 from django.db.models import Q
+import cloudinary.uploader
 # import backend_app.firebase_admin_init
 # from firebase_admin import auth as firebase_auth
 # import pyrebase4 as pyrebase
@@ -734,32 +736,38 @@ def logout(request):
 #start of signUp api
 @csrf_exempt
 @api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
 def postsignUp(request):
     try:
-        data = json.loads(request.body)
+        email = request.data.get("email")
+        name = request.data.get("name")
+        phone_number = request.data.get("phone_number")
+        password = request.data.get("password")
+        profile_image = request.FILES.get("profile_image")
 
-        # Extract data
-        email = data.get("email")
-        name = data.get("name")
-        phone_number = data.get("phone_number")
-        password = data.get("password")
-
-        # Check if email already exists globally (regardless of chama)
+        # Check if email already exists
         if Members.objects.filter(email=email).exists():
             return JsonResponse({"message": "An account with this email already exists"}, status=400)
+
+        # Upload image to Cloudinary if provided
+        image_url = None
+        if profile_image:
+            upload_result = cloudinary.uploader.upload(profile_image)
+            image_url = upload_result.get("secure_url")
 
         # Create Firebase user
         user = authe.create_user_with_email_and_password(email, password)
         uid = user['localId']
 
-        # Save Member (without chama for now)
+        # Save Member
         member = Members(
             chama=None,
             name=name,
             email=email,
             phone_number=phone_number,
-            password=uid, 
-            role="member"
+            password=uid,
+            role="member",
+            profile_image=image_url  # Ensure your model has this field
         )
         member.save()
 

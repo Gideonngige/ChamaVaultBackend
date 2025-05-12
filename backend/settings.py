@@ -217,3 +217,14 @@ MPESA_INITIATOR_USERNAME = 'testapi'
 # Plaintext password for initiator (to be used in B2C, B2B, AccountBalance
 #and TransactionStatusQuery Transactions)
 MPESA_INITIATOR_SECURITY_CREDENTIAL = 'Skb4kUuWtvsO//466Z4Jafbr3/9zZ8B7IxW4nutAPmOAcvEU4xFOVy0OaSVIJhXUFc+TIKatiXWnlkVWVefJK5kxLnq0FTQMzBGam8Yle4y/bNLj5b+jgieqpUZPfYceqktqPEjkH9K+XOhT7VIABCc/klFAXOvapx/yVesOkCgkVKbe4/vpBlA74zJ/9cH+KQyk32l+asLtgPr8qiYq3nT3HDVeYof6hQT/vQXUtd+RVHGuU8glfFj55cC2nv4/eQEKqkeHVgOardY8GXqW65vtNQSVqNec5ETLxsEqy+zbNoBZEt6uTtCNwxl2c9rcHUYKLHigVT+YUl4awnN5eQ=='
+
+
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+cloudinary.config(
+  cloud_name = 'dc68huvjj',
+  api_key = '188331473226221',
+  api_secret = 'ZkQOvGzoMshM6RVeHgxGETLopjU'
+)

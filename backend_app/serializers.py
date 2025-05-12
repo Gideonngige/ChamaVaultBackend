@@ -9,7 +9,7 @@ class MembersSerializer(serializers.ModelSerializer):
 class MembersSerializer2(serializers.ModelSerializer):
     class Meta:
         model = Members
-        fields = ['member_id','name','joined_date']
+        fields = ['member_id','name','joined_date','profile_image']
 
 class ChamasSerializer(serializers.ModelSerializer):
     class Meta:
