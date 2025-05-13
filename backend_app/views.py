@@ -7,7 +7,7 @@ from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, N
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, profit_distribution, investment_contribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation, ContributionDate, Penalty, Defaulters
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, InvestmentContribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation, ContributionDate, Penalty, Defaulters
 from django.db.models import Sum
 import pyrebase
 import json
@@ -605,7 +605,7 @@ def getInvestment(request, email, chama_id):
             return JsonResponse({"message": "Member or Chama not found"}, status=404)
 
         # Get contributions for the member in the chama
-        investment_contri = investment_contribution.objects.filter(chama=chama, member_id=member)
+        investment_contri = investmentContribution.objects.filter(chama=chama, member_id=member)
 
         # Process profits only if not already saved
         for contribution in investment_contri:
@@ -873,44 +873,47 @@ def activepolls(request, chama_id):
 # start of member poll
 @api_view(['POST'])
 def membervote(request):
-    print("Request Data:", request.data)  # Log the incoming data
-    
-    # Extract data from the request
+    # Log incoming request
+    print("Request Data:", request.data)
+
+    # Extract data from request
     poll_id = request.data.get('poll_id')
     choice_id = request.data.get('choice_id')
     email = request.data.get('email')
     chama_id = request.data.get('chama_id')
-    
 
-    print("Poll ID:", poll_id)
-    print("Choice ID:", choice_id)
-    print("Email:", email)
-    print("Chama ID:", chama_id)
+    # Validate input
+    if not all([poll_id, choice_id, email, chama_id]):
+        return Response({"error": "Missing required fields"}, status=400)
 
-    # Fetch the poll and choice objects
+    # Fetch poll
     try:
         poll = Poll.objects.get(id=poll_id)
     except Poll.DoesNotExist:
         return Response({"error": "Poll not found"}, status=404)
 
+    # Fetch choice
     try:
         choice = Choice.objects.get(id=choice_id)
     except Choice.DoesNotExist:
         return Response({"error": "Choice not found"}, status=404)
 
-    member_id = Members.objects.filter(email=email).first()
-    if not member_id:
+    # Fetch member
+    member = Members.objects.filter(email=email).first()
+    if not member:
         return Response({"error": "Member not found"}, status=404)
 
-    member_poll = MemberPoll.objects.filter(member=member_id, chama=chama_id, poll=poll).exists()
-    if member_poll:
+    # Check for duplicate vote
+    chama = Chama.objects.get(id=chama_id)
+    if MemberPoll.objects.filter(member=member, chama=chama, poll=poll).exists():
         return Response({"message": "You have already voted for this poll"}, status=200)
-    else:
-        # Create a MemberPoll object to record the member's vote
-        member_poll = MemberPoll.objects.create(member=member_id, chama=chama_id, poll=poll, choice=choice)
-        # Increment the vote count for the chosen option
-        choice.votes += 1
-        choice.save()
+
+    # Record the vote
+    MemberPoll.objects.create(member=member, chama=chama, poll=poll, choice=choice)
+
+    # Increment vote count
+    choice.votes += 1
+    choice.save()
 
     return Response({"message": "Vote recorded successfully"})
 

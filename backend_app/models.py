@@ -185,44 +185,25 @@ class Notifications(models.Model):
         return f"{self.notification_type} - {self.notification}"
 
 class Investment(models.Model):
-    investment_id = models.AutoField(primary_key=True)
-    amount_invested = models.DecimalField(max_digits=10, decimal_places=2)
-    INVESTMENT_TYPES = [
-        ('real estate', 'real estate'),
-        ('stock', 'stock'),
-    ]
-    investment_type = models.CharField(max_length=20, choices=INVESTMENT_TYPES)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE)
+    title = models.CharField(max_length=100)  # e.g., "3-Month Project"
+    description = models.TextField()
+    interest_rate = models.DecimalField(max_digits=5, decimal_places=2)  # e.g., 5%
+    duration_months = models.IntegerField()
+    image = models.URLField()
     STATUS = [
         ('active', 'active'),
-        ('completed', 'completed'),
+        ('inactive', 'inactive'),
     ]
-    status = models.CharField(max_length=20, choices=STATUS)
-    investment_date = models.DateTimeField(default=now)
-    def __str__(self):
-        return f"{self.investment_type} - {self.amount_invested}"
+    status = models.CharField(max_length=20, choices=STATUS, default="active")
+    created_at = models.DateTimeField(auto_now_add=True)
 
-class investment_contribution(models.Model):
-    contribution_id = models.AutoField(primary_key=True)
-    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
-    transactionRef = models.CharField(max_length=50, default="T073397058487061")
-    investment_id = models.ForeignKey(Investment, on_delete=models.CASCADE)
-    member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
-    contribution_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
-    contribution_date = models.DateTimeField(default=now)
-    investment_duration = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    def __str__(self):
-        return f"{self.investment_id} - {self.investment_duration} - {self.contribution_amount}"
-
-
-class profit_distribution(models.Model):
-    distribution_id = models.AutoField(primary_key=True)
-    investment_contribution_id = models.ForeignKey(investment_contribution, on_delete=models.CASCADE, default=1)
-    member_id = models.ForeignKey(Members, on_delete=models.CASCADE)
-    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
-    profit_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    def __str__(self):
-        return f"{self.member_id} - {self.profit_amount}"
+class InvestmentContribution(models.Model):
+    investment = models.ForeignKey(Investment, on_delete=models.CASCADE)
+    member = models.ForeignKey(Members, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    profit = models.DecimalField(max_digits=10, decimal_places=2)
+    contributed_at = models.DateTimeField(auto_now_add=True)
 
 
 class Expenses(models.Model):
