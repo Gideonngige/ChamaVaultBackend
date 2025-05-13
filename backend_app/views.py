@@ -1106,20 +1106,30 @@ def joinchama(request, member_id, chama_name):
 # start of update profile api
 @csrf_exempt
 @api_view(['POST'])
+@parser_classes([MultiPartParser])
 def updateprofile(request):
     try:
-        data = json.loads(request.body) 
-        member_id = data.get('member_id')
-        name = data.get('name')
-        phone_number = data.get('phone_number')
+        member_id = request.data.get('member_id')
+        name = request.data.get('name')
+        phone_number = request.data.get('phone_number')
+        profile_image = request.FILES.get('profile_image', None)
+
         member = Members.objects.get(member_id=member_id)
-        member.name = name
-        member.phone_number = phone_number
+
+        if name:
+            member.name = name
+        if phone_number:
+            member.phone_number = phone_number
+        if profile_image:
+            member.profile_image = profile_image  # Assuming this is an ImageField
+
         member.save()
-        return JsonResponse({"message":"ok"})
+        return JsonResponse({"message": "ok"})
 
     except Members.DoesNotExist:
         return JsonResponse({"message": "Member not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
 
 # end of update profile api
 
