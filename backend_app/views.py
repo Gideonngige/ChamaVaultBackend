@@ -1120,8 +1120,12 @@ def updateprofile(request):
             member.name = name
         if phone_number:
             member.phone_number = phone_number
+        
+        image_url = None
         if profile_image:
-            member.profile_image = profile_image  # Assuming this is an ImageField
+            upload_result = cloudinary.uploader.upload(profile_image)
+            image_url = upload_result.get("secure_url")
+            member.profile_image = image_url  # Assuming this is an ImageField
 
         member.save()
         return JsonResponse({"message": "ok"})
