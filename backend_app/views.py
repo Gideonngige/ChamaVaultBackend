@@ -904,7 +904,7 @@ def membervote(request):
         return Response({"error": "Member not found"}, status=404)
 
     # Check for duplicate vote
-    chama = Chama.objects.get(id=chama_id)
+    chama = Chamas.objects.get(id=chama_id)
     if MemberPoll.objects.filter(member=member, chama=chama, poll=poll).exists():
         return Response({"message": "You have already voted for this poll"}, status=200)
 
