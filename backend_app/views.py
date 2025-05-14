@@ -702,7 +702,7 @@ def new_investment(request):
         duration_months = int(duration_months)
         start_date = timezone.now()
         end_date = start_date + timedelta(days=duration_months * 30)
-        investment = Investment.objects.create(
+        investment = Investments.objects.create(
             chama=chama,
             investment_name=investment_name,
             description=description,
