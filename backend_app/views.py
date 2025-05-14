@@ -697,7 +697,6 @@ def new_investment(request):
         if image:
             upload_result = cloudinary.uploader.upload(image)
             image_url = upload_result.get("secure_url")
-            print(image_url)
 
         # Create investment
         duration_months = int(duration_months)

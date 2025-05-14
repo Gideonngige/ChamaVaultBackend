@@ -191,7 +191,7 @@ class Investments(models.Model):
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)  # e.g., 5%
     duration_months = models.IntegerField(default=0)
     image = models.URLField(default="https://via.placeholder.com/300x200.png?text=Investment+Image")
-    min_amount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00) 
+    min_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) 
     STATUS = [
         ('active', 'active'),
         ('inactive', 'inactive'),
