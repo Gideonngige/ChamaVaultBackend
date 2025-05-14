@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Members,Loans, Notifications, Transactions, Chamas, Contributions,Message, MembersLocation, Defaulters
+from .models import Members,Loans, Notifications, Transactions, Chamas, Contributions,Message, MembersLocation, Defaulters, Investments
 
 class MembersSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,3 +61,8 @@ class DefaultersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Defaulters
         fields = ['member_id','member_name', 'phone_number', 'status']
+    
+class InvestmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Investments
+        fields = ['id', 'investment_name', 'description', 'min_amount', 'interest_rate', 'duration_months', 'image']

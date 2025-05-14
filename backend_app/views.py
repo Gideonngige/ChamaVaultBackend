@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -721,6 +721,18 @@ def new_investment(request):
         return JsonResponse({"message": "Posting new investment failed", "error": str(e)}, status=500)
 
 # end of new_investment api
+
+# start of get_investments
+@api_view(['GET'])
+def get_investments(request, chama_id):
+    if not chama_id:
+        return JsonResponse({"message": "chama_id is required"}, status=400)
+    
+    chama = Chamas.objects.filter(chama_id=chama_id).first()
+    investments = Investments.objects.filter(chama=chama, status="active").order_by('-created_at')
+    serializer = InvestmentSerializer(investments, many=True)
+    return Response(serializer.data)
+# end of get_investments
 
 
 
