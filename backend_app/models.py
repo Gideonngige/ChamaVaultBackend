@@ -184,22 +184,24 @@ class Notifications(models.Model):
     def __str__(self):
         return f"{self.notification_type} - {self.notification}"
 
-class Investment(models.Model):
+class Investments(models.Model):
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100)  # e.g., "3-Month Project"
-    description = models.TextField()
+    investment_name = models.CharField(max_length=100, default="New Investment")  # e.g., "3-Month Project"
+    description = models.TextField(default="A new Project")
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)  # e.g., 5%
-    duration_months = models.IntegerField()
-    image = models.URLField()
+    duration_months = models.IntegerField(default=0)
+    image = models.URLField(default="https://via.placeholder.com/300x200.png?text=Investment+Image")
+    min_amount = models.DecimalField(max_digits=5, decimal_places=2, default=0.00) 
     STATUS = [
         ('active', 'active'),
         ('inactive', 'inactive'),
     ]
     status = models.CharField(max_length=20, choices=STATUS, default="active")
     created_at = models.DateTimeField(auto_now_add=True)
+    end_at = models.DateTimeField(default=timezone.now)
 
 class InvestmentContribution(models.Model):
-    investment = models.ForeignKey(Investment, on_delete=models.CASCADE)
+    investment = models.ForeignKey(Investments, on_delete=models.CASCADE)
     member = models.ForeignKey(Members, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     profit = models.DecimalField(max_digits=10, decimal_places=2)

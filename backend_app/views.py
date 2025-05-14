@@ -7,7 +7,7 @@ from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, N
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investment, InvestmentContribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation, ContributionDate, Penalty, Defaulters
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investments, InvestmentContribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation, ContributionDate, Penalty, Defaulters
 from django.db.models import Sum
 import pyrebase
 import json
@@ -559,7 +559,7 @@ def investment(request):
 
         member = Members.objects.filter(email=email).first()
         print(member)
-        investmentId = Investment.objects.filter(investment_type=investment_type).first()
+        investmentId = Investments.objects.filter(investment_type=investment_type).first()
         investment_id = investmentId.investment_id
         print(investment_id)
         if not investment_id:
@@ -672,6 +672,55 @@ def calculate_investment(request, member_id):
         return JsonResponse({"total":0})
 
 #end of calculate investment api
+
+# start of new_investment api
+@csrf_exempt
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+def new_investment(request):
+    try:
+        chama_id = request.data.get("chama_id")
+        investment_name = request.data.get("investment_name")
+        description = request.data.get("description")
+        min_amount = request.data.get("min_amount")
+        interest_rate = request.data.get("interest_rate")
+        duration_months = request.data.get("duration_months")
+        image = request.FILES.get("image")
+
+        # Validate Chama
+        chama = Chamas.objects.filter(chama_id=chama_id).first()
+        if not chama:
+            return JsonResponse({"message": "Chama not found"}, status=404)
+
+        # Upload image to Cloudinary if provided
+        image_url = None
+        if image:
+            upload_result = cloudinary.uploader.upload(image)
+            image_url = upload_result.get("secure_url")
+
+        # Create investment
+        duration_months = int(duration_months)
+        start_date = timezone.now()
+        end_date = start_date + timedelta(days=duration_months * 30)
+        investment = Investment.objects.create(
+            chama=chama,
+            investment_name=investment_name,
+            description=description,
+            interest_rate=float(interest_rate),
+            duration_months=int(duration_months),
+            image=image_url or "https://via.placeholder.com/300x200.png?text=Investment+Image"
+            min_amount=float(min_amount) if min_amount else 0.0,
+            status = "active",
+            end_at = end_date
+            
+        )
+
+        return JsonResponse({"message": "Investment created successfully"}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"message": "Posting new investment failed", "error": str(e)}, status=500)
+
+# end of new_investment api
 
 
 
