@@ -708,7 +708,7 @@ def new_investment(request):
             description=description,
             interest_rate=float(interest_rate),
             duration_months=int(duration_months),
-            image=image_url or "https://via.placeholder.com/300x200.png?text=Investment+Image"
+            image=image_url or "https://via.placeholder.com/300x200.png?text=Investment+Image",
             min_amount=float(min_amount) if min_amount else 0.0,
             status = "active",
             end_at = end_date
