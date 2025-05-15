@@ -370,9 +370,7 @@ def loan_allowed(request, email):
     return Response({"max_loan":f"Ksh.{max_loan}"})
 
 #start of get loans api
-from django.http import JsonResponse
-from django.db.models import Sum
-from .models import Members, Chamas, Loans, LoanApproval
+
 
 def getLoans(request, chama_id, email):
     try:
@@ -393,24 +391,39 @@ def getLoans(request, chama_id, email):
         pending_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending").first()
         if not pending_loan:
             return JsonResponse({"message": "No pending loan found"}, status=404)
+        
+
+        total_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending").aggregate(total=Sum('amount'))['total'] or 0.00
+        total_stl_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('amount'))['total'] or 0.00
+        total_stl_repayment = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00
+        stl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_date'))
+        stl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_deadline'))
+        print(total_loan)
 
         approval = LoanApproval.objects.filter(loan_id=pending_loan).first()
         if not approval:
-            return JsonResponse({"message": "Loan approval not found"}, status=404)
+            return JsonResponse({
+                "total_loan": total_loan,
+                "total_stl_loan": total_stl_loan,
+                "total_ltl_loan": 0,
+                "total_stl_repayment": total_stl_repayment,
+                "total_ltl_repayment": 0,
+                "stl_loan_date": stl_loan_date ,
+                "stl_loan_deadline": [],
+                "ltl_loan_date": [],
+                "ltl_loan_deadline": stl_loan_deadline,
+                "message": "No long term loan taken"
+            }, safe=False)
 
         if (approval.chairperson_approval == "approved" and
             approval.treasurer_approval == "approved" and
             approval.secretary_approval == "approved"):
 
             # Loan summaries
-            total_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending").aggregate(total=Sum('amount'))['total'] or 0.00
-            total_stl_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('amount'))['total'] or 0.00
-            total_stl_repayment = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00
+            
             total_ltl_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('amount'))['total'] or 0.00
             total_ltl_repayment = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00
 
-            stl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_date'))
-            stl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_deadline'))
             ltl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL").values('loan_date'))
             ltl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL").values('loan_deadline'))
 
