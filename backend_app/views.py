@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer, InvestmentProfitDetailSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer, InvestmentProfitDetailSerializer, ContributorSerializer
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -908,7 +908,6 @@ def individual_profits(request, member_id):
 #start of signin api
 def postsignIn(request, email, password, chama=None):
     try:
-        print("Chama received:", chama)
 
         # Authenticate user via Firebase
         user = authe.sign_in_with_email_and_password(email, password)
@@ -1327,7 +1326,8 @@ def joinchama(request, member_id, chama_name):
             email=member.email,
             phone_number=member.phone_number,
             password=member.password,
-            role="member"
+            role="member",
+            profile_image = member.profile_image
         )
         new_member.save()
         return JsonResponse({"message": f"You have successfully joined {chama_name}"})
@@ -1601,3 +1601,24 @@ def changeroles(request, chama_id, chairperson_id, treasurer_id, secretary_id):
     return JsonResponse({"message": "Roles updated successfully"}, status=200)
 
 # end of function to change roles
+
+# contributors api
+@api_view(['GET'])
+def contributors(request, chama_id):
+    try:
+        contributions = Contributions.objects.filter(chama_id=chama_id)
+
+        if not contributions.exists():
+            return Response([])
+
+        serializer = ContributorSerializer(contributions, many=True)
+        total_amount = contributions.aggregate(total=Sum('amount'))['total']
+
+        return Response({
+            "contributors": serializer.data,
+            "total_contributed": total_amount
+        })
+
+    except Exception as e:
+        return Response({'error': str(e)})
+# end of contributors api

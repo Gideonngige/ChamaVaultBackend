@@ -58,4 +58,5 @@ urlpatterns = [
     path('checkmemberinvested/<int:investment_id>/<int:member_id>/', views.checkmemberinvested, name='checkmemberinvested'),
     path('member_investment_summary/<int:member_id>/', views.member_investment_summary, name='member_investment_summary'),
     path('individual_profits/<int:member_id>/', views.individual_profits, name='individual_profits'),
+    path('contributors/<int:chama_id>/', views.contributors, name='contributors'),
 ]

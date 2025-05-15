@@ -80,3 +80,11 @@ class InvestmentProfitDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvestmentContribution
         fields = ['id', 'investment_name', 'profit', 'amount', 'end_at']
+
+class ContributorSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='member.name')
+    email = serializers.EmailField(source='member.email')
+
+    class Meta:
+        model = Contributions
+        fields = ['name', 'email', 'amount']
