@@ -779,6 +779,18 @@ def member_investment(request):
 
 # end of member_investment api
 
+# check if member have invested
+def checkmemberinvested(request, investment_id, member_id):
+    investment = Investments.objects.filter(id=investment_id).first()
+    member = Members.objects.filter(member_id=member_id).first()
+    check_member = InvestmentContribution.objects.filter(investment=investment, member=member)
+    if check_member:
+        return JsonResponse({"status":"not ok"})
+    else:
+        return JsonResponse({"status":"ok"})
+
+# end ...
+
 
 
 #start of signin api
