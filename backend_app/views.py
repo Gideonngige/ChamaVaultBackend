@@ -1019,7 +1019,7 @@ def activepolls(request, chama_id):
     now = timezone.now()
 
     # Get all polls that are active (stop_time is in the future)
-    polls = Poll.objects.filter(chama=chama_id, stop_time__lt=now)
+    polls = Poll.objects.filter(chama=chama_id, stop_time__gte=now)
 
     polls_data = []
     for poll in polls:
