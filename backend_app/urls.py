@@ -54,4 +54,5 @@ urlpatterns = [
     path('changeroles/<int:chama_id>/<int:chairperson_id>/<int:treasurer_id>/<int:secretary_id>/', views.changeroles, name='changeroles'),
     path('new_investment/', views.new_investment, name='new_investment'),
     path('get_investments/<int:chama_id>/', views.get_investments, name='get_investments'),
+    path('member_investment/', views.member_investment, name='member_investment'),
 ]

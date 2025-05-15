@@ -202,9 +202,11 @@ class Investments(models.Model):
 
 class InvestmentContribution(models.Model):
     investment = models.ForeignKey(Investments, on_delete=models.CASCADE)
+    transactionRef = models.CharField(max_length=50, default="T073397058487061")
     member = models.ForeignKey(Members, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     profit = models.DecimalField(max_digits=10, decimal_places=2)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     contributed_at = models.DateTimeField(auto_now_add=True)
 
 

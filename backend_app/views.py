@@ -734,6 +734,51 @@ def get_investments(request, chama_id):
     return Response(serializer.data)
 # end of get_investments
 
+# start of member_investment api
+def calculate_monthly_profit(principal, monthly_interest_rate, months):
+    rate = monthly_interest_rate / 100
+    total_amount = principal * ((1 + rate) ** months)
+    profit = total_amount - principal
+    return round(profit, 2), round(total_amount, 2)
+
+@csrf_exempt
+@api_view(['POST'])
+def member_investment(request):
+    try:
+        investment_id = request.data.get("investment_id")
+        member_id = request.data.get("member_id")
+        amount = request.data.get("amount")
+        transactionRef = request.data.get("transactionRef")
+        investment = Investments.objects.filter(id=investment_id).first()
+        member = Members.objects.filter(member_id=member_id).first()
+
+        if not investment and not member:
+            return JsonResponse({"message":"Investment or member does not exist!"})
+        
+        check_member = InvestmentContribution.objects.filter(investment=investment, member=member)
+        if check_member:
+            return JsonResponse({"message":"You have already invested in this investment"})
+        
+        interest_rate = investment.interest_rate
+        duration_months = investment.duration_months
+        profit, total = calculate_monthly_profit(amount, interest_rate, duration_months)
+        
+        InvestmentContribution.objects.create(
+            investment = investment,
+            transactionRef = transactionRef,
+            member = member,
+            amount = amount,
+            profit = profit,
+            total = total
+        )
+        return JsonResponse({"message":"Invested successfully"})
+
+
+    except Exception as e:
+        return JsonResponse({"message": "Investment request failed", "error": str(e)}, status=500)
+
+# end of member_investment api
+
 
 
 #start of signin api
