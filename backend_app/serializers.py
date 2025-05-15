@@ -66,3 +66,9 @@ class InvestmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Investments
         fields = ['id', 'investment_name', 'description', 'min_amount', 'interest_rate', 'duration_months', 'image']
+
+class MemberInvestmentSummarySerializer(serializers.Serializer):
+    investment_id = serializers.IntegerField()
+    investment_name = serializers.CharField()
+    total_invested = serializers.DecimalField(max_digits=10, decimal_places=2)
+    total_amount_with_profit = serializers.DecimalField(max_digits=10, decimal_places=2)

@@ -56,4 +56,5 @@ urlpatterns = [
     path('get_investments/<int:chama_id>/', views.get_investments, name='get_investments'),
     path('member_investment/', views.member_investment, name='member_investment'),
     path('checkmemberinvested/<int:investment_id>/<int:member_id>/', views.checkmemberinvested, name='checkmemberinvested'),
+    path('member_investment_summary/<int:member_id>/', views.member_investment_summary, name='member_investment_summary'),
 ]

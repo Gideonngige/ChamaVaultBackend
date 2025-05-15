@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -788,8 +788,38 @@ def checkmemberinvested(request, investment_id, member_id):
         return JsonResponse({"status":"not ok"})
     else:
         return JsonResponse({"status":"ok"})
-
 # end ...
+
+# start of getting member investments
+@api_view(['GET'])
+def member_investment_summary(request, member_id):
+    member = Members.objects.filter(member_id=member_id).first()
+
+    summary = (
+        InvestmentContribution.objects
+        .filter(member_id=member)
+        .values('investment__id', 'investment__investment_name')
+        .annotate(
+            total_invested=Sum('amount'),
+            total_amount_with_profit=Sum('total')
+        )
+    )
+
+    # Rename fields to match serializer keys
+    data = [
+        {
+            "investment_id": item["investment__id"],
+            "investment_name": item["investment__investment_name"],
+            "total_invested": item["total_invested"],
+            "total_amount_with_profit": item["total_amount_with_profit"],
+        }
+        for item in summary
+    ]
+
+    serializer = MemberInvestmentSummarySerializer(data, many=True)
+    return Response(serializer.data)
+
+# end of getting member investments
 
 
 
