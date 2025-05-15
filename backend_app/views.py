@@ -409,9 +409,9 @@ def getLoans(request, chama_id, email):
                 "total_stl_repayment": total_stl_repayment,
                 "total_ltl_repayment": 0,
                 "stl_loan_date": stl_loan_date ,
-                "stl_loan_deadline": [],
+                "stl_loan_deadline": stl_loan_deadline,
                 "ltl_loan_date": [],
-                "ltl_loan_deadline": stl_loan_deadline,
+                "ltl_loan_deadline": [],
                 "message": "No long term loan taken"
             }, safe=False)
 
