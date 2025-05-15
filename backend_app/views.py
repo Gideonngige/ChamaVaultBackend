@@ -370,34 +370,80 @@ def loan_allowed(request, email):
     return Response({"max_loan":f"Ksh.{max_loan}"})
 
 #start of get loans api
+from django.http import JsonResponse
+from django.db.models import Sum
+from .models import Members, Chamas, Loans, LoanApproval
+
 def getLoans(request, chama_id, email):
     try:
         member = Members.objects.filter(email=email).first()
-        loanee = Loans.objects.filter(chama=chama_id, name=member, loan_status="pending").first()
-        print(loanee)
-        approval = LoanApproval.objects.filter(loan_id=loanee).first()
-        if approval.chairperson_approval == "approved" and approval.treasurer_approval == "approved" and approval.secretary_approval == "approved":
-            print("Chairperson approved")
-            if member:
-                chama = Chamas.objects.get(chama_id=chama_id)
-                total_loan = Loans.objects.filter(name=member,chama=chama, loan_status="pending").aggregate(total=Sum('amount'))['total'] or 0.00
-                total_stl_loan = Loans.objects.filter(name=member,chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('amount'))['total'] or 0.00
-                total_stl_repayment = Loans.objects.filter(name=member,chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00
-                total_ltl_loan = Loans.objects.filter(name=member,chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('amount'))['total'] or 0.00
-                total_ltl_repayment = Loans.objects.filter(name=member,chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00
-                stl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_date'))
-                stl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_deadline'))
-                ltl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL").values('loan_date'))
-                ltl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_deadline'))
-                return JsonResponse({"total_loan": total_loan,"total_stl_loan":total_stl_loan, "total_ltl_loan":total_ltl_loan,"total_stl_repayment":total_stl_repayment,"total_ltl_repayment":total_ltl_repayment, "stl_loan_date":stl_loan_date, "stl_loan_deadline":stl_loan_deadline, "ltl_loan_date":ltl_loan_date, "ltl_loan_deadline":ltl_loan_deadline}, safe=False)
+        if not member:
+            return JsonResponse({"message": "Member not found"}, status=404)
 
-            else:
-                return JsonResponse({"message":"No loans found"})
+        chama = Chamas.objects.filter(chama_id=chama_id).first()
+        if not chama:
+            return JsonResponse({"message": "Chama not found"}, status=404)
+
+        # Check if the member has taken any loan in this chama
+        has_loan = Loans.objects.filter(name=member, chama=chama).exists()
+        if not has_loan:
+            return JsonResponse({"message": "No loans found for this member"}, status=404)
+
+        # Get a pending loan and check approvals
+        pending_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending").first()
+        if not pending_loan:
+            return JsonResponse({"message": "No pending loan found"}, status=404)
+
+        approval = LoanApproval.objects.filter(loan_id=pending_loan).first()
+        if not approval:
+            return JsonResponse({"message": "Loan approval not found"}, status=404)
+
+        if (approval.chairperson_approval == "approved" and
+            approval.treasurer_approval == "approved" and
+            approval.secretary_approval == "approved"):
+
+            # Loan summaries
+            total_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending").aggregate(total=Sum('amount'))['total'] or 0.00
+            total_stl_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('amount'))['total'] or 0.00
+            total_stl_repayment = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00
+            total_ltl_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('amount'))['total'] or 0.00
+            total_ltl_repayment = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00
+
+            stl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_date'))
+            stl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_deadline'))
+            ltl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL").values('loan_date'))
+            ltl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL").values('loan_deadline'))
+
+            return JsonResponse({
+                "total_loan": total_loan,
+                "total_stl_loan": total_stl_loan,
+                "total_ltl_loan": total_ltl_loan,
+                "total_stl_repayment": total_stl_repayment,
+                "total_ltl_repayment": total_ltl_repayment,
+                "stl_loan_date": stl_loan_date,
+                "stl_loan_deadline": stl_loan_deadline,
+                "ltl_loan_date": ltl_loan_date,
+                "ltl_loan_deadline": ltl_loan_deadline,
+            }, safe=False)
+
         else:
-            return JsonResponse({"total_loan": 0,"total_stl_loan":0, "total_ltl_loan":0,"total_stl_repayment":0,"total_ltl_repayment":0, "stl_loan_date":0, "stl_loan_deadline":"n/a", "ltl_loan_date":"n/a", "ltl_loan_deadline":"n/a"}, safe=False)
+            # Not approved yet
+            return JsonResponse({
+                "total_loan": 0,
+                "total_stl_loan": 0,
+                "total_ltl_loan": 0,
+                "total_stl_repayment": 0,
+                "total_ltl_repayment": 0,
+                "stl_loan_date": [],
+                "stl_loan_deadline": [],
+                "ltl_loan_date": [],
+                "ltl_loan_deadline": [],
+                "message": "Loan not yet fully approved"
+            }, safe=False)
 
-    except Members.DoesNotExist:
-        return JsonResponse({"message":"Invalid email address"})
+    except Exception as e:
+        return JsonResponse({"message": f"Server error: {str(e)}"}, status=500)
+
 #end of getLoans api 
 
 # get loan repayment for specific member
