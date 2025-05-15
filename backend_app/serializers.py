@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Members,Loans, Notifications, Transactions, Chamas, Contributions,Message, MembersLocation, Defaulters, Investments
+from .models import Members,Loans, Notifications, Transactions, Chamas, Contributions,Message, MembersLocation, Defaulters, Investments, InvestmentContribution
 
 class MembersSerializer(serializers.ModelSerializer):
     class Meta:
@@ -72,3 +72,11 @@ class MemberInvestmentSummarySerializer(serializers.Serializer):
     investment_name = serializers.CharField()
     total_invested = serializers.DecimalField(max_digits=10, decimal_places=2)
     total_amount_with_profit = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+class InvestmentProfitDetailSerializer(serializers.ModelSerializer):
+    investment_name = serializers.CharField(source='investment.investment_name')
+    end_at = serializers.DateTimeField(source='investment.end_at')
+
+    class Meta:
+        model = InvestmentContribution
+        fields = ['id', 'investment_name', 'profit', 'amount', 'end_at']

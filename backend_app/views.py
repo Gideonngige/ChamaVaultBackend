@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer, InvestmentProfitDetailSerializer
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -797,7 +797,7 @@ def member_investment_summary(request, member_id):
 
     summary = (
         InvestmentContribution.objects
-        .filter(member_id=member)
+        .filter(member_id=member, investment__status='active')
         .values('investment__id', 'investment__investment_name')
         .annotate(
             total_invested=Sum('amount'),
@@ -818,8 +818,31 @@ def member_investment_summary(request, member_id):
 
     serializer = MemberInvestmentSummarySerializer(data, many=True)
     return Response(serializer.data)
-
 # end of getting member investments
+
+# get profit
+@api_view(['GET'])
+def individual_profits(request, member_id):
+    today = timezone.now()
+
+    # Ensure we have a valid member instance
+    Investments.objects.filter(end_at__lt=today, status='active').update(status='inactive')
+
+
+    member = Members.objects.filter(member_id=member_id).first()
+    if not member:
+        return Response({"error": "Member not found"}, status=404)
+
+    # Get contributions made by the member for investments that have ended
+    contributions = InvestmentContribution.objects.filter(
+        member=member,
+        investment__end_at__lt=today
+    )
+
+    serializer = InvestmentProfitDetailSerializer(contributions, many=True)
+    return Response(serializer.data)
+
+# end of get profit
 
 
 
