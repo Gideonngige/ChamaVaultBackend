@@ -1183,7 +1183,7 @@ def schedulemeeting(request):
 
             Notifications.objects.create(
             chama=chama,
-            member_id=member,
+            member_id=None,
             notification_type="event",
             notification=f"Meeting Schedule on {meeting_date}.\n{agenda}"
             )
@@ -1275,7 +1275,7 @@ def sendmessage(request):
         member_id = data.get('member_id')
 
         chama = Chamas.objects.get(chama_id=chama_id)
-        member = Members.objects.get(member_id=member_id)
+        member = Members.objects.get(chama=chama,member_id=member_id)
 
         if member:
             Message.objects.create(
