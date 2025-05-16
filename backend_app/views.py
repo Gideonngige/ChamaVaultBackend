@@ -374,11 +374,11 @@ def loan_allowed(request, email):
 
 def getLoans(request, chama_id, email):
     try:
-        member = Members.objects.filter(email=email).first()
+        chama = Chamas.objects.filter(chama_id=chama_id).first()
+        member = Members.objects.filter(chama=chama, email=email).first()
         if not member:
             return JsonResponse({"message": "Member not found"}, status=404)
 
-        chama = Chamas.objects.filter(chama_id=chama_id).first()
         if not chama:
             return JsonResponse({"message": "Chama not found"}, status=404)
 
