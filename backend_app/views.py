@@ -486,27 +486,28 @@ def getloanrepayment(request, chamaname, member_id):
 
 #start of get all loans
 @api_view(['GET'])
-def getAllLoans(request, role):
+def getAllLoans(request, role, chama_id):
     try:
+        chama = Chamas.objects.get(chama_id=chama_id)
         if role == "chairperson":
             loans = LoanApproval.objects.filter(chairperson_approval="pending")
             loan_ids = loans.values_list('loan_id', flat=True)
             print(list(loan_ids))  
-            loans = Loans.objects.filter(loan_id__in=loan_ids, loan_type="LTL")
+            loans = Loans.objects.filter(chama=chama,loan_id__in=loan_ids, loan_type="LTL")
             serializer = LoansSerializer(loans, many=True)
             return JsonResponse(serializer.data, safe=False)
         elif role == "treasurer":
             loans = LoanApproval.objects.filter(treasurer_approval="pending")
             loan_ids = loans.values_list('loan_id', flat=True)
             print(list(loan_ids))  
-            loans = Loans.objects.filter(loan_id__in=loan_ids)
+            loans = Loans.objects.filter(chama=chama,loan_id__in=loan_ids)
             serializer = LoansSerializer(loans, many=True)
             return JsonResponse(serializer.data, safe=False)
         elif role == "secretary":
             loans = LoanApproval.objects.filter(secretary_approval="pending")
             loan_ids = loans.values_list('loan_id', flat=True)
             print(list(loan_ids))  
-            loans = Loans.objects.filter(loan_id__in=loan_ids)
+            loans = Loans.objects.filter(chama=chama,loan_id__in=loan_ids)
             serializer = LoansSerializer(loans, many=True)
             return JsonResponse(serializer.data, safe=False)
         
