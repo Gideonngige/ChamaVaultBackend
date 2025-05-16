@@ -304,8 +304,8 @@ sms = africastalking.SMS
 @api_view(['GET'])
 def loans(request, email, chama_id, amount, loan_type):
     try:
-        member = Members.objects.filter(email=email).first()
         chama = Chamas.objects.get(chama_id=chama_id)
+        member = Members.objects.filter(chama=chama,email=email).first()
         print(member)
         print(chama)
         if loan_type == "LTL":
