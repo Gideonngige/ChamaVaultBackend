@@ -107,6 +107,8 @@ def getMember(request, email, chama):
 # start of count total chama members
 @api_view(['GET'])
 def totalchamamembers(request, chama):
+    if chama.lower() == "null":
+        return JsonResponse({"total_members":0})
     chama = Chamas.objects.get(name=chama)
     total_members = Members.objects.filter(chama=chama).count()
     return JsonResponse({"total_members":total_members})
