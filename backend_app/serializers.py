@@ -44,9 +44,10 @@ class ContributionsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class MessageSerializer(serializers.ModelSerializer):
+    profile_image = serializers.CharField(source='member.profile_image')
     class Meta:
         model = Message
-        fields = ['id', 'text', 'sender', 'timestamp']
+        fields = ['id', 'text', 'sender', 'timestamp', 'profile_image']
 
 class MemberLocationSerializer(serializers.ModelSerializer):
     class Meta:
