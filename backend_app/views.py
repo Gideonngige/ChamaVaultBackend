@@ -265,7 +265,7 @@ def payloan(request):
 
 #start of get transactions api
 def transactions(request, transaction_type, email, chama_id):
-    member = Members.objects.filter(email=email).first()
+    member = Members.objects.filter(email=email, chama=chama_id).first()
     try:
         if not member:
             return JsonResponse({"message":"Please signin"})
@@ -584,7 +584,7 @@ def get_notifications(request, email, chama_id):
 #start of getSavings api
 def getContributions(request, chama_id, email):
     try:
-        member = Members.objects.filter(email=email).first()
+        member = Members.objects.filter(email=email, chama=chama_id).first()
         contributions = Contributions.objects.filter(chama=chama_id, member=member).first()
 
         if member:
