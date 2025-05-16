@@ -244,9 +244,10 @@ def payloan(request):
         chama_id = data.get('chama_id')
         transactionRef = data.get('transactionRef')
         print(chama_id)
-
-        member = Members.objects.filter(email=email).first()
+        
         chama = Chamas.objects.get(chama_id=chama_id)
+        member = Members.objects.filter(chama=chama,email=email).first()
+        
         print(chama)
         if member:
             repayment = LoanRepayment(transactionRef=transactionRef, chama=chama, member=member, amount=amount,loan_type=loan_type)
@@ -658,8 +659,8 @@ def calcprofit(principal, duration_months):
 def getInvestment(request, email, chama_id):
     try:
         # Get the member and chama
-        member = Members.objects.filter(email=email).first()
         chama = Chamas.objects.filter(chama_id=chama_id).first()
+        member = Members.objects.filter(email=email).first()
 
         if not member or not chama:
             return JsonResponse({"message": "Member or Chama not found"}, status=404)
@@ -852,8 +853,9 @@ def checkmemberinvested(request, investment_id, member_id):
 
 # start of getting member investments
 @api_view(['GET'])
-def member_investment_summary(request, member_id):
-    member = Members.objects.filter(member_id=member_id).first()
+def member_investment_summary(request, member_id, chama_id):
+    chama = Chamas.objects.filter(chama_id=chama_id).first()
+    member = Members.objects.filter(chama=chama,member_id=member_id).first()
 
     summary = (
         InvestmentContribution.objects
@@ -882,14 +884,14 @@ def member_investment_summary(request, member_id):
 
 # get profit
 @api_view(['GET'])
-def individual_profits(request, member_id):
+def individual_profits(request, member_id, chama_id):
     today = timezone.now()
 
     # Ensure we have a valid member instance
     Investments.objects.filter(end_at__lt=today, status='active').update(status='inactive')
 
-
-    member = Members.objects.filter(member_id=member_id).first()
+    chama = Chamas.objects.filter(chama_id=chama_id).first()
+    member = Members.objects.filter(chama=chama, member_id=member_id).first()
     if not member:
         return Response({"error": "Member not found"}, status=404)
 
@@ -1170,9 +1172,10 @@ def schedulemeeting(request):
         meeting_date = data.get('date')
         chama_id = data.get('chama_id')
         member_id = data.get('member_id')
-
-        member = Members.objects.filter(member_id=member_id).first()
+        
         chama = Chamas.objects.get(chama_id=chama_id)
+        member = Members.objects.filter(member_id=member_id).first()
+        
 
         if member:
             meeting = Meeting(chama=chama, agenda=agenda, meeting_date=meeting_date)
