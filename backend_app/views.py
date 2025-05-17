@@ -232,6 +232,20 @@ def contributions(request):
 
 #end of contributions api
 
+# check contribution date
+def checkcontributiondate(request, chama_id):
+    try:
+        chama = Chamas.objects.get(chama_id=chama_id)
+        contribution_date_obj = ContributionDate.objects.filter(chama=chama).exists()
+        if contribution_date_obj:
+            return JsonResponse({"message": "ok"}, status=200)
+        else:
+            return JsonResponse({"message": "not ok"}, status=400)
+
+    except Chamas.DoesNotExist:
+        return JsonResponse({"message":"Chama does not exists"})
+# end of check contribution date
+
 
 #start of payloan api
 # @csrf_exempt
