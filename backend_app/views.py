@@ -240,10 +240,10 @@ def checkcontributiondate(request, chama_id):
         if contribution_date_obj:
             return JsonResponse({"message": "ok"}, status=200)
         else:
-            return JsonResponse({"message": "not ok"}, status=400)
+            return JsonResponse({"message": "not ok"}, status=200)
 
     except Chamas.DoesNotExist:
-        return JsonResponse({"message":"Chama does not exists"})
+        return JsonResponse({"message":"Chama does not exists"}, status=404)
 # end of check contribution date
 
 
