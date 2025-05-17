@@ -88,4 +88,4 @@ class ContributorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contributions
-        fields = ['name', 'email', 'amount']
+        fields = ['name', 'email','contribution_date', 'amount']
