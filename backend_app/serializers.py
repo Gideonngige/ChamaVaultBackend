@@ -95,5 +95,5 @@ class LoanSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='member.email')
 
     class Meta:
-        model = Contributions
+        model = Loans
         fields = ['name', 'email','loan_status', 'loan_type', 'loan_date', 'amount']
