@@ -1663,3 +1663,12 @@ def loanees(request, chama_id):
     except Exception as e:
         return Response({'error': str(e)})
 # end of contributors api
+
+# api to calculate creditscore
+from . creditscore import calculate_credit_score
+def creditscoreapi(request, member_id, chama_id):
+    try:
+        credit_score = calculate_credit_score(member_id, chama_id)
+        return JsonResponse({"credit_score": credit_score})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

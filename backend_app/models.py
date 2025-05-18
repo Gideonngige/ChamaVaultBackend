@@ -38,6 +38,7 @@ class Members(models.Model):
     role = models.CharField(max_length=20, choices=ROLE, default='member')
     joined_date = models.DateTimeField(default=now)
     profile_image = models.URLField(default="https://i.pravatar.cc/150?img=3")
+    credit_score = models.DecimalField(max_digits=5, decimal_places=2, default=0)
 
     def __str__(self):
         return f"{self.member_id} - {self.name}"

@@ -61,4 +61,5 @@ urlpatterns = [
     path('contributors/<int:chama_id>/', views.contributors, name='contributors'),
     path('checkcontributiondate/<int:chama_id>/', views.checkcontributiondate, name='checkcontributiondate'),
     path('loanees/<int:chama_id>/', views.loanees, name='loanees'),
+    path('creditscoreapi/<int:member_id>/<int:chama_id>/', views.creditscoreapi, name='creditscoreapi'),
 ]
