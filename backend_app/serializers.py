@@ -89,3 +89,11 @@ class ContributorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contributions
         fields = ['name', 'email','contribution_date', 'amount']
+
+class LoanSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='member.name')
+    email = serializers.EmailField(source='member.email')
+
+    class Meta:
+        model = Contributions
+        fields = ['name', 'email','loan_status', 'loan_type', 'loan_date', 'amount']

@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer, InvestmentProfitDetailSerializer, ContributorSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer, InvestmentProfitDetailSerializer, ContributorSerializer, LoanSerializer
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -1637,6 +1637,27 @@ def contributors(request, chama_id):
         return Response({
             "contributors": serializer.data,
             "total_contributed": total_amount
+        })
+
+    except Exception as e:
+        return Response({'error': str(e)})
+# end of contributors api
+
+# get loans api
+@api_view(['GET'])
+def loanees(request, chama_id):
+    try:
+        loans = Loans.objects.filter(chama_id=chama_id)
+
+        if not loans.exists():
+            return Response([])
+
+        serializer = LoanSerializer(loans, many=True)
+        total_amount = loans.aggregate(total=Sum('amount'))['total']
+
+        return Response({
+            "loanees": serializer.data,
+            "total_loan": total_amount
         })
 
     except Exception as e:
