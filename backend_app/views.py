@@ -118,17 +118,36 @@ def totalchamamembers(request, chama):
 
 # start of total chama savings
 @api_view(['GET'])
-def totalchamasavings(request, chama):
-    chama = Chamas.objects.get(name=chama)
+def totalchamasavings(request, chama_id):
+    chama = Chamas.objects.filter(chama_id=chama_id).first()
     total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
-    return JsonResponse({"total_savings":total_savings})
+    total_expenses = Expenses.objects.filter(chama=chama).aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
+    total_loans_repaid = Loans.objects.filter(chama=chama,loan_status="paid").aggregate(Sum('repayment_amount'))['repayment_amount__sum'] or 0
+    net_savings = (total_savings + total_loans_repaid) - total_expenses
+   
+    return JsonResponse({"net_savings":net_savings})
 # end of total chama savings
 
 # start of total loans savings
 @api_view(['GET'])
-def totalchamaloans(request, chama):
-    chama = Chamas.objects.get(name=chama)
-    total_loans = Loans.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
+def totalchamaloans(request, chama_id):
+    total_loans = 0
+    chama = Chamas.objects.filter(chama_id=chama_id).first()
+    pending_loan = Loans.objects.filter(chama=chama, loan_status="pending", loan_type="LTL").first()
+    if not pending_loan:
+        return JsonResponse({"message": "No pending loan found"}, status=404)
+    
+    approval = LoanApproval.objects.filter(loan_id=pending_loan).first()
+    if not approval:
+        total_loans = 0
+    
+    elif(approval.chairperson_approval == "approved" and approval.treasurer_approval == "approved" and approval.secretary_approval == "approved"):
+            # Loan summaries
+        total_ltl_loan = Loans.objects.filter(chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('amount'))['total'] or 0.00
+        total_loans = total_ltl_loan
+        
+    total_stl_loan = Loans.objects.filter(chama=chama, loan_status="pending", loan_type="STL").aggregate(Sum('amount'))['amount__sum'] or 0
+    total_loans += total_stl_loan
     return JsonResponse({"total_loans":total_loans})
 # end of total loans savings
 
@@ -325,8 +344,13 @@ def loans(request, email, chama_id, amount, loan_type):
     try:
         chama = Chamas.objects.get(chama_id=chama_id)
         member = Members.objects.filter(chama=chama,email=email).first()
-        print(member)
-        print(chama)
+        total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
+        total_expenses = Expenses.objects.filter(chama=chama).aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
+        total_loans_repaid = Loans.objects.filter(chama=chama,loan_status="paid").aggregate(Sum('repayment_amount'))['repayment_amount__sum'] or 0
+        net_savings = (total_savings + total_loans_repaid) - total_expenses
+        if amount > net_savings:
+            return Response({"message":"chama has insufficient funds","status":200})
+            
         if loan_type == "LTL":
             period = 360
         elif loan_type == "STL":
@@ -407,16 +431,18 @@ def getLoans(request, chama_id, email):
             return JsonResponse({"message": "No loans found for this member"}, status=404)
 
         # Get a pending loan and check approvals
-        pending_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending").first()
+        pending_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="LTL").first()
         if not pending_loan:
             return JsonResponse({"message": "No pending loan found"}, status=404)
         
 
-        total_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending").aggregate(total=Sum('amount'))['total'] or 0.00
+        # total_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending").aggregate(total=Sum('amount'))['total'] or 0.00
+        total_loan = 0
         total_stl_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('amount'))['total'] or 0.00
         total_stl_repayment = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00
         stl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_date'))
         stl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_deadline'))
+        total_loan = total_stl_loan
         print(total_loan)
 
         approval = LoanApproval.objects.filter(loan_id=pending_loan).first()
@@ -445,6 +471,7 @@ def getLoans(request, chama_id, email):
 
             ltl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL").values('loan_date'))
             ltl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL").values('loan_deadline'))
+            total_loan += total_ltl_loan
 
             return JsonResponse({
                 "total_loan": total_loan,
@@ -461,16 +488,16 @@ def getLoans(request, chama_id, email):
         else:
             # Not approved yet
             return JsonResponse({
-                "total_loan": 0,
-                "total_stl_loan": 0,
+                "total_loan": total_loan,
+                "total_stl_loan": total_stl_loan,
                 "total_ltl_loan": 0,
-                "total_stl_repayment": 0,
+                "total_stl_repayment": total_stl_repayment,
                 "total_ltl_repayment": 0,
-                "stl_loan_date": [],
-                "stl_loan_deadline": [],
+                "stl_loan_date": stl_loan_date,
+                "stl_loan_deadline": stl_loan_deadline,
                 "ltl_loan_date": [],
                 "ltl_loan_deadline": [],
-                "message": "Loan not yet fully approved"
+                "message": "Long Term Loan not yet fully approved"
             }, safe=False)
 
     except Exception as e:
@@ -1223,18 +1250,6 @@ def getmemberscontribution(request, chama_id):
         return JsonResponse({"message":"Invalid email address"})
 # end of get memebr contrinution
 
-# start of get expenses api
-def getexpenses(request, chama_id):
-    try:
-        total_rent = Expenses.objects.filter(chama=chama_id, expense_type="rent").aggregate(total=Sum('expense_amount'))['total'] or 0.00
-        total_travel = Expenses.objects.filter(chama=chama_id, expense_type="travel").aggregate(total=Sum('expense_amount'))['total'] or 0.00
-        total_business = Expenses.objects.filter(chama=chama_id, expense_type="business").aggregate(total=Sum('expense_amount'))['total'] or 0.00
-
-        return JsonResponse({"total_rent": total_rent, "total_travel": total_travel, "total_business": total_business})
-    except Expenses.DoesNotExist:
-        return JsonResponse({"message":"Invalid chama ID"})
-# end of get expenses api
-
 #start of messaging api
 @api_view(['POST'])
 def sendmessage(request):
@@ -1692,8 +1707,8 @@ def chamaexpenses(request, member_id, chama_id, value, description, amount):
         member = Members.objects.filter(member_id=member_id,chama=chama_id).first()
         total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
         total_expenses = Expenses.objects.filter(chama=chama).aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
-        total_loans = Loans.objects.filter(chama=chama,loan_status="pending").aggregate(Sum('amount'))['amount__sum'] or 0
-        net_savings = total_savings - (total_expenses + total_loans)
+        total_loans_repaid = Loans.objects.filter(chama=chama,loan_status="paid").aggregate(Sum('repayment_amount'))['repayment_amount__sum'] or 0
+        net_savings = (total_savings + total_loans_repaid) - total_expenses
         print(net_savings)
         member_name = member.name
 
