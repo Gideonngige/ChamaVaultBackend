@@ -120,12 +120,12 @@ def totalchamamembers(request, chama):
 @api_view(['GET'])
 def totalchamasavings(request, chama_id):
     chama = Chamas.objects.filter(chama_id=chama_id).first()
-    total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
+    total_saving = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
     total_expenses = Expenses.objects.filter(chama=chama).aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
     total_loans_repaid = Loans.objects.filter(chama=chama,loan_status="paid").aggregate(Sum('repayment_amount'))['repayment_amount__sum'] or 0
-    net_savings = (total_savings + total_loans_repaid) - total_expenses
+    net_savings = (total_saving + total_loans_repaid) - total_expenses
    
-    return JsonResponse({"net_savings":net_savings})
+    return JsonResponse({"total_savings":net_savings})
 # end of total chama savings
 
 # start of total loans savings
@@ -350,7 +350,7 @@ def loans(request, email, chama_id, amount, loan_type):
         net_savings = (total_savings + total_loans_repaid) - total_expenses
         if amount > net_savings:
             return Response({"message":"chama has insufficient funds","status":200})
-            
+
         if loan_type == "LTL":
             period = 360
         elif loan_type == "STL":
