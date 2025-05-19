@@ -214,13 +214,14 @@ class InvestmentContribution(models.Model):
 class Expenses(models.Model):
     expense_id = models.AutoField(primary_key=True)
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
+    member = models.ForeignKey(Members, on_delete=models.CASCADE, default=1)
     EXPENSES = [
-        ('rent', 'rent'),
-        ('travel', 'travel'),
-        ('business', 'business'),
-        ('other', 'other'),
+        ('Rent', 'Rent'),
+        ('Travel', 'Travel'),
+        ('Business', 'Business'),
+        ('Other', 'Other'),
     ]
-    expense_type = models.CharField(max_length=20, choices=EXPENSES, default='other')
+    expense_type = models.CharField(max_length=20, choices=EXPENSES, default='Other')
     expense_amount =  models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
     expense_date = models.DateTimeField(auto_now_add=True)

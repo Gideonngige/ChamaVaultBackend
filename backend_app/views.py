@@ -36,7 +36,7 @@ from decouple import config
 # import pyrebase4 as pyrebase
 
 # Create your views here.
-config1 = {
+config = {
     "apiKey": "AIzaSyBYX6dcWok3ldsw4gFXHEjyKbVs6tONxKc",
     "authDomain": "chamavault-d1d35.firebaseapp.com",
     "databaseURL": "https://chamavault-d1d35-default-rtdb.firebaseio.com/",
@@ -46,7 +46,7 @@ config1 = {
     "appId": "1:739112708717:web:481c8338f8b5fdfb192d64",
     "measurementId": "G-47P7H86QBS"
 }
-firebase = pyrebase.initialize_app(config1)
+firebase = pyrebase.initialize_app(config)
 authe = firebase.auth() 
 database = firebase.database()
 
@@ -1628,78 +1628,93 @@ def creditscoreapi(request, member_id, chama_id):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-# business to customer apis
-@csrf_exempt
-def b2c_timeout_callback(request):
-    if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        print("Queue Timeout Callback:", data)
-        # Log or store in DB if needed
-        return JsonResponse({"Result": "Queue timeout received"}, status=200)
-    return JsonResponse({"error": "Invalid request"}, status=400)
-
-@csrf_exempt
-def b2c_result_callback(request):
-    if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        print("Result Callback:", data)
-        # Save or log result for transaction reference
-        return JsonResponse({"Result": "B2C Result received"}, status=200)
-    return JsonResponse({"error": "Invalid request"}, status=400)
-
-
-
-def get_access_token():
-    consumer_key = config('MPESA_CONSUMER_KEY')
-    consumer_secret = config('MPESA_CONSUMER_SECRET')
-    api_URL = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
-    
-    response = requests.get(api_URL, auth=(consumer_key, consumer_secret))
-    
-    if response.status_code == 200:
-        access_token = response.json().get('access_token')
-        return access_token
-    else:
-        print(response.text)  # for debugging
-        raise Exception("Failed to retrieve access token")
-
-
-def b2c_payment_request(phone_number, amount, occasion="Loan Payout"):
-    token = get_access_token()  # ✅ do not override this function anywhere
+# transfer money to members using paystack
+def send_mpesa_payout(request, phone_number, name, amount_kes, reason="Payout"):
+    # phone_number = "0710000000"
+    PAYSTACK_SECRET_KEY = "sk_test_adb8f6fbc4bab87dc6814514ab1d7b9df87faea4"
 
     headers = {
-        'Authorization': f'Bearer {token}',
-        'Content-Type': 'application/json'
+        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
+        "Content-Type": "application/json"
     }
 
-    payload = {
-        "InitiatorName": config('MPESA_INITIATOR_NAME'),
-        "SecurityCredential": config('MPESA_SECURITY_CREDENTIAL'),
-        "CommandID": "BusinessPayment",  # or SalaryPayment / PromotionPayment
-        "Amount": amount,
-        "PartyA": config('MPESA_SHORTCODE'),
-        "PartyB": phone_number,
-        "Remarks": "Loan Payout",
-        "QueueTimeOutURL": "http://127.0.0.1:8000/b2c_timeout_callback/",
-        "ResultURL": "http://127.0.0.1:8000/b2c_result_callback/",
-        "Occasion": occasion
+    # Step 1: Create transfer recipient
+    recipient_payload = {
+        "type": "mobile_money",
+        "name": name,
+        "account_number": phone_number,
+        "bank_code": "MPESA",  # M-Pesa code in Paystack
+        "currency": "KES"
     }
 
-    b2c_url = config('MPESA_B2C_URL')  # e.g. https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest
-    response = requests.post(b2c_url, json=payload, headers=headers)
+    recipient_res = requests.post("https://api.paystack.co/transferrecipient", json=recipient_payload, headers=headers)
+    recipient_data = recipient_res.json()
 
+    if not recipient_data.get("status"):
+        return JsonResponse({
+            "success": False,
+            "stage": "create_recipient",
+            "error": recipient_data.get("message", "Failed to create recipient")
+        }, status=400)
+
+    recipient_code = recipient_data["data"]["recipient_code"]
+
+    # Step 2: Make the transfer
+    transfer_payload = {
+        "source": "balance",
+        "amount": int(float(amount_kes) * 100),  # Convert to kobo
+        "recipient": recipient_code,
+        "reason": reason
+    }
+
+    transfer_res = requests.post("https://api.paystack.co/transfer", json=transfer_payload, headers=headers)
+    transfer_data = transfer_res.json()
+
+    if not transfer_data.get("status"):
+        return JsonResponse({
+            "success": False,
+            "stage": "transfer",
+            "error": transfer_data.get("message", "Failed to initiate transfer")
+        }, status=400)
+
+    return JsonResponse({
+        "success": True,
+        "message": "Transfer successful",
+        "transfer": transfer_data["data"]
+    })
+
+
+# api for chama expenses
+api_view(['GET'])
+def chamaexpenses(request, member_id, chama_id, value, description, amount):
     try:
-        return response.json()
-    except Exception:
-        return {"error": "Invalid response from M-Pesa", "details": response.text}
+        chama = Chamas.objects.filter(chama_id=chama_id).first()
+        member = Members.objects.filter(member_id=member_id,chama=chama_id).first()
+        total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
+        total_expenses = Expenses.objects.filter(chama=chama).aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
+        total_loans = Loans.objects.filter(chama=chama,loan_status="pending").aggregate(Sum('amount'))['amount__sum'] or 0
+        net_savings = total_savings - (total_expenses + total_loans)
+        print(net_savings)
+        member_name = member.name
 
+        if amount > net_savings:
+            return JsonResponse({"message":"Chama have inadequate funds"}, status=400)
+        else:
+            expenses = Expenses.objects.create(
+            chama = chama,
+            member = member,
+            expense_type = value,
+            expense_amount = amount,
+            description = description
+            )
 
-def send_money_to_member(request):
-    phone = "254708374149"
-    amount = 10
-
-    try:
-        response = b2c_payment_request(phone, amount)
-        return JsonResponse(response)
+            Notifications.objects.create(
+                chama=chama,
+                notification_type="alert",
+                notification=f"{member_name} has taken KES.{amount} for expense {value}"
+            )
+            return JsonResponse({"message":"Expense taken successfully"})
+        
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
