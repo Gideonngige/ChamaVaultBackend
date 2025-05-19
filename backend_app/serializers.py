@@ -40,10 +40,10 @@ class AllChamasSerializer(serializers.ModelSerializer):
     
 
 class ContributionsSerializer(serializers.ModelSerializer):
-    member = serializers.StringRelatedField()
+    member = serializers.CharField(source='member.name')
     class Meta:
         model = Contributions
-        fields = '__all__'
+        fields = ['contribution_id','member','amount','contribution_date','chama']
 
 class MessageSerializer(serializers.ModelSerializer):
     profile_image = serializers.CharField(source='member.profile_image')

@@ -29,6 +29,7 @@ from django.db.models import Sum
 from datetime import date
 from django.db.models import Q
 import cloudinary.uploader
+from . creditscore import calculate_credit_score
 # import backend_app.firebase_admin_init
 # from firebase_admin import auth as firebase_auth
 # import pyrebase4 as pyrebase
@@ -1665,7 +1666,6 @@ def loanees(request, chama_id):
 # end of contributors api
 
 # api to calculate creditscore
-from . creditscore import calculate_credit_score
 def creditscoreapi(request, member_id, chama_id):
     try:
         credit_score = calculate_credit_score(member_id, chama_id)
