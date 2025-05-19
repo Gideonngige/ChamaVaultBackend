@@ -30,12 +30,13 @@ from datetime import date
 from django.db.models import Q
 import cloudinary.uploader
 from . creditscore import calculate_credit_score
+from decouple import config
 # import backend_app.firebase_admin_init
 # from firebase_admin import auth as firebase_auth
 # import pyrebase4 as pyrebase
 
 # Create your views here.
-config = {
+config1 = {
     "apiKey": "AIzaSyBYX6dcWok3ldsw4gFXHEjyKbVs6tONxKc",
     "authDomain": "chamavault-d1d35.firebaseapp.com",
     "databaseURL": "https://chamavault-d1d35-default-rtdb.firebaseio.com/",
@@ -45,7 +46,7 @@ config = {
     "appId": "1:739112708717:web:481c8338f8b5fdfb192d64",
     "measurementId": "G-47P7H86QBS"
 }
-firebase = pyrebase.initialize_app(config)
+firebase = pyrebase.initialize_app(config1)
 authe = firebase.auth() 
 database = firebase.database()
 
@@ -1212,52 +1213,6 @@ def schedulemeeting(request):
         return Response({"message":"Invalid email address"})
 # end of schedule meeting api
 
-# create transfer recepient api
-@api_view(['GET'])
-def create_transfer_recipient(request):
-    url = "https://api.paystack.co/transferrecipient"
-    headers = {
-        "Authorization": f"Bearer sk_test_adb8f6fbc4bab87dc6814514ab1d7b9df87faea4",
-        "Content-Type": "application/json",
-    }
-    data = {
-    "type": "mobile_money",
-    "name": "Gideon Ushindi",
-    "account_number": "0710000000",  # This is the M-Pesa phone number (format: 2547XXXXXXXX)
-    "bank_code": "MPESA",  # This is the M-Pesa bank code
-    "currency": "KES",
-    "mobile_money": {
-        "phone": "0710000000",
-        "provider": "mpesa"  # MUST be exactly "mpesa"
-    }
-}
-
-    response = requests.post(url, json=data, headers=headers)
-    return JsonResponse(response.json())
-# end
-
-# start of initiating payment
-@api_view(['GET'])
-def initiate_transfer(request):
-    url = "https://api.paystack.co/transfer"
-    headers = {
-        "Authorization": "Bearer sk_test_adb8f6fbc4bab87dc6814514ab1d7b9df87faea4",  # Replace with your secret key
-        "Content-Type": "application/json",
-    }
-
-    data = {
-        "source": "balance",  # Use your Paystack balance
-        "amount": 5000,       # Amount in **kobo** or **cents** (so KES 50 = 5000)
-        "recipient": "RCP_m8cwtwr2j9dimcr",  # Use the recipient_code you just got
-        "reason": "Withdrawal to M-Pesa"
-    }
-
-    response = requests.post(url, json=data, headers=headers)
-    print(response.json())
-    return JsonResponse(response.json())
-
-# end of initiating payment
-
 #get members contribution
 def getmemberscontribution(request, chama_id):
     try:
@@ -1670,5 +1625,81 @@ def creditscoreapi(request, member_id, chama_id):
     try:
         credit_score = calculate_credit_score(member_id, chama_id)
         return JsonResponse({"credit_score": credit_score})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+# business to customer apis
+@csrf_exempt
+def b2c_timeout_callback(request):
+    if request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+        print("Queue Timeout Callback:", data)
+        # Log or store in DB if needed
+        return JsonResponse({"Result": "Queue timeout received"}, status=200)
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+@csrf_exempt
+def b2c_result_callback(request):
+    if request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+        print("Result Callback:", data)
+        # Save or log result for transaction reference
+        return JsonResponse({"Result": "B2C Result received"}, status=200)
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
+def get_access_token():
+    consumer_key = config('MPESA_CONSUMER_KEY')
+    consumer_secret = config('MPESA_CONSUMER_SECRET')
+    api_URL = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+    
+    response = requests.get(api_URL, auth=(consumer_key, consumer_secret))
+    
+    if response.status_code == 200:
+        access_token = response.json().get('access_token')
+        return access_token
+    else:
+        print(response.text)  # for debugging
+        raise Exception("Failed to retrieve access token")
+
+
+def b2c_payment_request(phone_number, amount, occasion="Loan Payout"):
+    token = get_access_token()  # ✅ do not override this function anywhere
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json'
+    }
+
+    payload = {
+        "InitiatorName": config('MPESA_INITIATOR_NAME'),
+        "SecurityCredential": config('MPESA_SECURITY_CREDENTIAL'),
+        "CommandID": "BusinessPayment",  # or SalaryPayment / PromotionPayment
+        "Amount": amount,
+        "PartyA": config('MPESA_SHORTCODE'),
+        "PartyB": phone_number,
+        "Remarks": "Loan Payout",
+        "QueueTimeOutURL": "http://127.0.0.1:8000/b2c_timeout_callback/",
+        "ResultURL": "http://127.0.0.1:8000/b2c_result_callback/",
+        "Occasion": occasion
+    }
+
+    b2c_url = config('MPESA_B2C_URL')  # e.g. https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest
+    response = requests.post(b2c_url, json=payload, headers=headers)
+
+    try:
+        return response.json()
+    except Exception:
+        return {"error": "Invalid response from M-Pesa", "details": response.text}
+
+
+def send_money_to_member(request):
+    phone = "254708374149"
+    amount = 10
+
+    try:
+        response = b2c_payment_request(phone, amount)
+        return JsonResponse(response)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)

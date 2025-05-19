@@ -35,8 +35,6 @@ urlpatterns = [
     path('checkmembervoted/<int:member_id>/<int:chama_id>/<int:poll_id>/', views.checkmembervoted, name='checkmembervoted'),
     path('schedulemeeting/', views.schedulemeeting, name='schedulemeeting'),
     path('payloan/', views.payloan, name='payloan'),
-    path('create_transfer_recipient/', views.create_transfer_recipient, name='create_transfer_recipient'),
-    path('initiate_transfer/', views.initiate_transfer, name='initiate_transfer'),
     path('getmemberscontribution/<int:chama_id>/', views.getmemberscontribution, name='getmemberscontribution'),
     path('getexpenses/<int:chama_id>/', views.getexpenses, name='getexpenses'),
     path('sendmessage/', views.sendmessage, name='sendmessage'),
@@ -62,4 +60,7 @@ urlpatterns = [
     path('checkcontributiondate/<int:chama_id>/', views.checkcontributiondate, name='checkcontributiondate'),
     path('loanees/<int:chama_id>/', views.loanees, name='loanees'),
     path('creditscoreapi/<int:member_id>/<int:chama_id>/', views.creditscoreapi, name='creditscoreapi'),
+    path('send_money_to_member/', views.send_money_to_member, name='send_money_to_member'),
+    path('b2c_timeout_callback/', views.b2c_timeout_callback, name='b2c_timeout_callback'),
+    path('b2c_result_callback/', views.b2c_result_callback, name='b2c_result_callback'),
 ]
