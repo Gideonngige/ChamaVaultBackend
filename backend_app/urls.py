@@ -62,4 +62,5 @@ urlpatterns = [
     path('creditscoreapi/<int:member_id>/<int:chama_id>/', views.creditscoreapi, name='creditscoreapi'),
     path('send_mpesa_payout/<str:phone_number>/<str:name>/<int:amount_kes>/<str:reason>/', views.send_mpesa_payout, name='send_mpesa_payout'),
     path('chamaexpenses/<int:member_id>/<int:chama_id>/<str:value>/<str:description>/<int:amount>/', views.chamaexpenses, name='chamaexpenses'),
+    path('totalexpenses/<int:chama_id>/', views.totalexpenses, name='totalexpenses'),
 ]

@@ -1718,3 +1718,15 @@ def chamaexpenses(request, member_id, chama_id, value, description, amount):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     
+# chama expenses
+def totalexpenses(request, chama_id):
+    try:
+        chama = Chamas.objects.filter(chama_id=chama_id).first()
+        total_business = Expenses.objects.filter(chama=chama, expense_type="Business").aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
+        total_rent = Expenses.objects.filter(chama=chama, expense_type="Rent").aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
+        total_travel = Expenses.objects.filter(chama=chama, expense_type="Travel").aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
+        total_others = Expenses.objects.filter(chama=chama, expense_type="Others").aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
+        return JsonResponse({"total_business":total_business, "total_rent":total_rent, "total_travel":total_rent, "total_others":total_others})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
