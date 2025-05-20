@@ -431,7 +431,7 @@ def getLoans(request, chama_id, email):
             return JsonResponse({"message": "No loans found for this member"}, status=404)
 
         # Get a pending loan and check approvals
-        pending_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="LTL").first()
+        pending_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending").first()
         if not pending_loan:
             return JsonResponse({"message": "No pending loan found"}, status=404)
         
