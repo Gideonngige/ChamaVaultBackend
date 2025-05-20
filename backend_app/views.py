@@ -122,7 +122,7 @@ def totalchamasavings(request, chama_id):
     chama = Chamas.objects.filter(chama_id=chama_id).first()
     total_saving = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
     total_expenses = Expenses.objects.filter(chama=chama).aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
-    total_loans_repaid = Loans.objects.filter(chama=chama,loan_status="paid").aggregate(Sum('repayment_amount'))['repayment_amount__sum'] or 0
+    total_loans_repaid = LoanRepayment.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
     net_savings = (total_saving + total_loans_repaid) - total_expenses
    
     return JsonResponse({"total_savings":net_savings})
@@ -1618,13 +1618,34 @@ def contributors(request, chama_id):
 @api_view(['GET'])
 def loanees(request, chama_id):
     try:
-        loans = Loans.objects.filter(chama_id=chama_id)
+        # STL loans: include all
+        stl_loans = Loans.objects.filter(
+            chama_id=chama_id,
+            loan_type='STL'
+        )
 
-        if not loans.exists():
+        # LTL loans: only approved by all 3
+        ltl_loans = Loans.objects.filter(
+            chama_id=chama_id,
+            loan_type='LTL',
+            loanapproval__chairperson_approval='approved',
+            loanapproval__treasurer_approval='approved',
+            loanapproval__secretary_approval='approved'
+        )
+
+        # Combine into one list
+        all_loans = list(stl_loans) + list(ltl_loans)
+
+        if not all_loans:
             return Response([])
 
-        serializer = LoanSerializer(loans, many=True)
-        total_amount = loans.aggregate(total=Sum('amount'))['total']
+        # Manually serialize the combined loans
+        serializer = LoanSerializer(all_loans, many=True)
+
+        # Manually sum amounts from both querysets
+        total_stl = stl_loans.aggregate(total=Sum('amount'))['total'] or 0
+        total_ltl = ltl_loans.aggregate(total=Sum('amount'))['total'] or 0
+        total_amount = total_stl + total_ltl
 
         return Response({
             "loanees": serializer.data,
@@ -1633,6 +1654,8 @@ def loanees(request, chama_id):
 
     except Exception as e:
         return Response({'error': str(e)})
+
+
 # end of contributors api
 
 # api to calculate creditscore
@@ -1707,7 +1730,7 @@ def chamaexpenses(request, member_id, chama_id, value, description, amount):
         member = Members.objects.filter(member_id=member_id,chama=chama_id).first()
         total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
         total_expenses = Expenses.objects.filter(chama=chama).aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
-        total_loans_repaid = Loans.objects.filter(chama=chama,loan_status="paid").aggregate(Sum('repayment_amount'))['repayment_amount__sum'] or 0
+        total_loans_repaid = LoanRepayment.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
         net_savings = (total_savings + total_loans_repaid) - total_expenses
         print(net_savings)
         member_name = member.name
