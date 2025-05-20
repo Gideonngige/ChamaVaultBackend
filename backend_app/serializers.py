@@ -19,9 +19,10 @@ class ChamasSerializer(serializers.ModelSerializer):
 class LoansSerializer(serializers.ModelSerializer):
     credit_score = serializers.CharField(source='name.credit_score')
     name = serializers.CharField(source='name.name')
+    loanee_id = serializers.CharField(source='name.member_id')
     class Meta:
         model = Loans
-        fields = ['loan_id','amount','repayment_amount','loan_status','loan_type','loan_date','loan_deadline','name','chama','credit_score']
+        fields = ['loan_id','loanee_id','amount','repayment_amount','loan_status','loan_type','loan_date','loan_deadline','name','chama','credit_score']
 
 class NotificationsSerializer(serializers.ModelSerializer):
     class Meta:
