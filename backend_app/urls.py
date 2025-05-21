@@ -63,4 +63,5 @@ urlpatterns = [
     path('chamaexpenses/<int:member_id>/<int:chama_id>/<str:value>/<str:description>/<int:amount>/', views.chamaexpenses, name='chamaexpenses'),
     path('totalexpenses/<int:chama_id>/', views.totalexpenses, name='totalexpenses'),
     path('insurance/', views.insurance, name='insurance'),
+    path('get_total_insurance/<int:member_id>/<int:chama_id>/', views.get_total_insurance, name='get_total_insurance'),
 ]

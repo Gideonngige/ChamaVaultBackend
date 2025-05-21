@@ -1825,3 +1825,14 @@ def insurance(request):
         return Response({"message":"Invalid email address"})
 
 # end of insurance api
+@api_view(['GET']) 
+def get_total_insurance(request, member_id, chama_id):
+    try:
+        chama = Chamas.objects.filter(chama_id=chama_id).first()
+        member = Members.objects.filter(chama=chama, member_id=member_id).first()
+
+        total_insurance = Insurance.objects.filter(chama=chama, member_id=member).aggregate(Sum('amount'))['amount__sum'] or 0
+        return Response({"total_insurance":total_insurance})
+    
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
