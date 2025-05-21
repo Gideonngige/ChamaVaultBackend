@@ -327,28 +327,29 @@ def transactions(request, transaction_type, email, chama_id):
 
 def calc_repayment_amount(amount, months, loan_type):
     if loan_type == "LTL":
-        interest = amount * 0.1 * months / 12
+        interest = amount * 0.01 * months / 12
         repayment_amount =amount +  interest
         return repayment_amount
     elif loan_type == "STL":
-        interest = amount * 0.3 * months / 12
+        interest = amount * 0.1 * months / 12
         repayment_amount = amount + interest
         return repayment_amount
    
 #end of calculate function
 
 
-africastalking.initialize(username='sandbox', api_key='atsk_35b2da862cc85124c522aec60fa8eedde173fc50f9fb9e0645ca97e6252f2c535930259b')
-sms = africastalking.SMS
+# africastalking.initialize(username='sandbox', api_key='atsk_35b2da862cc85124c522aec60fa8eedde173fc50f9fb9e0645ca97e6252f2c535930259b')
+# sms = africastalking.SMS
 @api_view(['GET'])
 def loans(request, email, chama_id, amount, loan_type):
     try:
         chama = Chamas.objects.get(chama_id=chama_id)
         member = Members.objects.filter(chama=chama,email=email).first()
         total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
-        total_expenses = Expenses.objects.filter(chama=chama).aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
-        total_loans_repaid = Loans.objects.filter(chama=chama,loan_status="paid").aggregate(Sum('repayment_amount'))['repayment_amount__sum'] or 0
-        net_savings = (total_savings + total_loans_repaid) - total_expenses
+        total_loans = Loans.objects.filter(chama=chama, loan_status="pending").aggregate(Sum('amount'))['amount__sum'] or 0
+        total_loans_repaid = Loans.objects.filter(chama=chama).aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
+        net_savings = (total_savings - total_loans) + total_loans_repaid
+        print(net_savings)
         if amount > net_savings:
             return Response({"message":"chama has insufficient funds","status":200})
 
@@ -363,35 +364,29 @@ def loans(request, email, chama_id, amount, loan_type):
         months = period / 30
         repayment_amount = calc_repayment_amount(amount, months, loan_type)
         if loan_type == "LTL":
-            loan = Loans(name=member, chama=chama, amount=amount, repayment_amount=repayment_amount, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
+            loan = Loans(name=member, chama=chama, amount=amount, repayment_amount=repayment_amount,amount_paid=0.00, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
             loan.save()
             transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
             transaction.save()
 
-            loan_id = Loans.objects.get(name=member, chama=chama, amount=amount, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
-            approval = LoanApproval(loan_id=loan_id, chairperson_approval="pending", treasurer_approval="pending", secretary_approval="pending")
-            approval.save()
-
-            response = sms.send("Hello", ["+254797655727"])
-            print(response)
             Notifications.objects.create(
                 member_id=member,
                 chama=chama,
                 notification_type="alert",
-                notification=f"Your loan request of KES.{amount} has been sent for approval"
+                notification=f"Your loan request of KES.{amount} has been granted successfully"
             )
 
-            return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successfully. Wait as the team verify it.","status":200})
+            return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successfully.","status":200})
 
         elif loan_type == "STL":
-            loan = Loans(name=member,chama=chama, amount=amount, repayment_amount=repayment_amount, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
+            loan = Loans(name=member,chama=chama, amount=amount, repayment_amount=repayment_amount,amount_paid=0.00, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
             loan.save()
             transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
             transaction.save()
 
             # response = sms.send("Hello", ["07123456789"], sender_id="Chamavault")
-            response = sms.send("Hello", ["+254797655727"])
-            print(response)
+            # response = sms.send("Hello", ["+254797655727"])
+            # print(response)
             Notifications.objects.create(
                 member_id=member,
                 chama=chama,
