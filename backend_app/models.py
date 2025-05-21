@@ -58,6 +58,11 @@ class Contributions(models.Model):
     member = models.ForeignKey(Members, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
+    CONTRIBUTION_TYPE = [
+        ('ordinary','ordinary'),
+        ('education','education'),
+    ]
+    contribution_type = models.CharField(max_length=20, choices=CONTRIBUTION_TYPE, default='contribution')
     contribution_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
