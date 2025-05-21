@@ -654,17 +654,17 @@ def get_notifications(request, email, chama_id):
 
 
 #start of getSavings api
-def getContributions(request, chama_id, email):
+def getContributions(request, chama_id, member_id):
     try:
-        member = Members.objects.filter(email=email, chama=chama_id).first()
+        member = Members.objects.filter(member_id=member_id, chama=chama_id).first()
         contributions = Contributions.objects.filter(chama=chama_id, member=member).first()
 
         if member:
             chama = Chamas.objects.get(chama_id=chama_id)
-            total_contributions = Contributions.objects.filter(member=member, chama=chama_id).aggregate(total=Sum('amount'))['total'] or 0.00
-            penalty = Penalty.objects.filter(contribution=contributions).aggregate(Sum('amount'))['amount__sum'] or 0.00
-            saving_date = list(Contributions.objects.filter(member=member, chama=chama_id).values('contribution_date'))
-            return JsonResponse({"total_contributions": total_contributions,"saving_date":saving_date, "interest":10, "penalty":penalty}, safe=False)
+            total_edu_contributions = Contributions.objects.filter(member=member, chama=chama_id, contribution_type="education").aggregate(total=Sum('amount'))['total'] or 0.00
+            total_ord_contributions = Contributions.objects.filter(member=member, chama=chama_id, contribution_type="ordinary").aggregate(total=Sum('amount'))['total'] or 0.00
+            
+            return JsonResponse({"total_edu_contributions": total_edu_contributions,"total_ord_contributions":total_ord_contributions}, safe=False)
 
         else:
             return JsonResponse({"message":"No Contributions found"})
