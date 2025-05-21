@@ -89,10 +89,10 @@ def getMember(request, email, chama):
         print("Chama received:", chama)
 
         if chama.lower() == "null":
-            member = Members.objects.get(email=email)
+            member = Members.objects.filter(chama=None,email=email).first()
         else:
-            chama_obj = Chamas.objects.get(name=chama)
-            member = Members.objects.get(chama=chama_obj, email=email)
+            chama_obj = Chamas.objects.filter(name=chama).first()
+            member = Members.objects.filter(chama=chama_obj, email=email).first()
 
         serializer = MembersSerializer(member)
         return JsonResponse(serializer.data, safe=False)

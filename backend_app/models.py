@@ -34,6 +34,7 @@ class Members(models.Model):
         ('chairperson','chairperson'),
         ('treasurer','treasurer'),
         ('secretary','secretary'),
+        ('admin','admin'),
     ]
     role = models.CharField(max_length=20, choices=ROLE, default='member')
     joined_date = models.DateTimeField(default=now)
