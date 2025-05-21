@@ -202,6 +202,7 @@ def contributions(request):
         phonenumber = data.get('phonenumber')
         chama_id = data.get('chama_id')
         transactionRef = data.get('transactionRef')
+        savingType = data.get('savingType')
         print(chama_id)
 
         member = Members.objects.filter(chama=chama_id, email=email).first()
@@ -218,7 +219,7 @@ def contributions(request):
 
         if member:
             if today > contribution_date:
-                contribution = Contributions(transactionRef=transactionRef, member=member, amount=amount, chama=chama)
+                contribution = Contributions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, contribution_type=savingType)
                 contribution.save()
                 transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Contribution")
                 transaction.save()
@@ -240,7 +241,7 @@ def contributions(request):
                 return JsonResponse({"message":f"Contribution of Ksh.{amount} to chama{chama_id} was successful","status":200})
             
             else:
-                contribution = Contributions(transactionRef=transactionRef, member=member, amount=amount, chama=chama)
+                contribution = Contributions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, contribution_type=savingType)
                 contribution.save()
                 transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Contribution")
                 transaction.save()
