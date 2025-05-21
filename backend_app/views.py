@@ -7,7 +7,7 @@ from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, N
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investments, InvestmentContribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation, ContributionDate, Penalty, Defaulters
+from .models import Members, Chamas, Contributions, Loans, Notifications, Transactions, Investments, InvestmentContribution, Expenses, LoanApproval, Poll, Choice, MemberPoll, Meeting, LoanRepayment, Message, MembersLocation, ContributionDate, Penalty, Defaulters, Insurance
 from django.db.models import Sum
 import pyrebase
 import json
@@ -1793,3 +1793,35 @@ def totalexpenses(request, chama_id):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+# insurance api
+@api_view(['POST']) 
+def insurance(request):
+    try:
+        data = json.loads(request.body) 
+        email = data.get('email')
+        amount = data.get('amount')
+        phonenumber = data.get('phonenumber')
+        chama_id = data.get('chama_id')
+        transactionRef = data.get('transactionRef')
+        
+        chama = Chamas.objects.get(chama_id=chama_id)
+        member = Members.objects.filter(chama=chama, email=email).first()
+
+        insurance_save = Insurance(transactionRef=transactionRef, member=member, amount=amount, chama=chama)
+        insurance_save.save()
+        transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Insurance")
+        transaction.save()
+        Notifications.objects.create(
+            member_id=member,
+            chama=chama,
+            notification_type="alert",
+            notification=f"Your insurance of KES.{amount} was successfully"
+        )
+        return Response({"message":"Insurance deposited successfully"})
+
+
+    except Members.DoesNotExist:
+        return Response({"message":"Invalid email address"})
+
+# end of insurance api

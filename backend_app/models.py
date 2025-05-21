@@ -167,7 +167,7 @@ class Transactions(models.Model):
         ('Loan','Loan'),
         ('Expense','Expense'),
         ('Expense','Expense'),
-        ('Investment','Investment'),
+        ('Insurance','Insurance'),
         ('Other','Other'),
     ]
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE, default='Other')
@@ -283,3 +283,11 @@ class Message(models.Model):
 
     def _str_(self):
         return f"{self.sender}: {self.text[:20]}"
+
+class Insurance(models.Model):
+    insurance_id = models.AutoField(primary_key=True)
+    transactionRef = models.CharField(max_length=50, default="T073397058487061")
+    member = models.ForeignKey(Members, on_delete=models.CASCADE)
+    chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    insurance_date = models.DateTimeField(auto_now_add=True)
