@@ -281,8 +281,9 @@ def payloan(request):
         phonenumber = data.get('phonenumber')
         chama_id = data.get('chama_id')
         transactionRef = data.get('transactionRef')
-        loan_id = data.get("loanId")
+        loan_id = data.get("loan_id")
         print(chama_id)
+        print(loan_id)
         
         chama = Chamas.objects.get(chama_id=chama_id)
         member = Members.objects.filter(chama=chama,email=email).first()
