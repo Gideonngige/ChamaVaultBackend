@@ -23,16 +23,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 
 #'django-insecure-warma_a=ah#lg$($qcbr_$f_80ij@42e&ph^u-5bv$&u@5q&!l'
-SECRET_KEY = os.environ.get('SECRET_KEY')
-# SECRET_KEY = 'django-insecure-warma_a=ah#lg$($qcbr_$f_80ij@42e&ph^u-5bv$&u@5q&!l'
+# SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'django-insecure-warma_a=ah#lg$($qcbr_$f_80ij@42e&ph^u-5bv$&u@5q&!l'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG','False').lower() == 'True'
-# DEBUG = True
+# DEBUG = os.environ.get('DEBUG','False').lower() == 'True'
+DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS','').split(' ')
+# ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS','').split(' ')
 
-# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -130,8 +130,8 @@ DATABASES = {
 # end of railway database
 
 
-database_url = os.environ.get('DATABASE_URL')
-DATABASES['default'] = dj_database_url.parse(database_url)
+# database_url = os.environ.get('DATABASE_URL')
+# DATABASES['default'] = dj_database_url.parse(database_url)
 
 
 

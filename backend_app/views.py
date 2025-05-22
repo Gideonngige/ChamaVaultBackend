@@ -364,15 +364,17 @@ def calc_repayment_amount(amount, months, loan_type):
 @api_view(['GET'])
 def loans(request, email, chama_id, amount, loan_type):
     try:
+        print(chama_id)
         chama = Chamas.objects.get(chama_id=chama_id)
         member = Members.objects.filter(chama=chama,email=email).first()
         total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
 
-        total_loans_repaid = Loans.objects.filter(chama=chama,loan_status="paid").aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
+        total_loans_repaid = LoanRepayment.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
         net_savings = (total_savings - total_loans_repaid)
         if amount > net_savings:
             return Response({"message":"chama has insufficient funds","status":200})
-
+        
+        period = 0
         if loan_type == "LTL":
             period = 360
         elif loan_type == "STL":
