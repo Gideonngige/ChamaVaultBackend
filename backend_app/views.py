@@ -120,10 +120,10 @@ def totalchamamembers(request, chama):
 @api_view(['GET'])
 def totalchamasavings(request, chama_id):
     chama = Chamas.objects.filter(chama_id=chama_id).first()
-    total_saving = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
-    total_expenses = Expenses.objects.filter(chama=chama).aggregate(Sum('expense_amount'))['expense_amount__sum'] or 0
+    total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
+    total_loans = Loans.objects.filter(chama=chama, loan_status="pending").aggregate(Sum('amount'))['amount__sum'] or 0
     total_loans_repaid = LoanRepayment.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
-    net_savings = (total_saving + total_loans_repaid) - total_expenses
+    net_savings = (total_savings - total_loans) + total_loans_repaid
    
     return JsonResponse({"total_savings":net_savings})
 # end of total chama savings
@@ -133,22 +133,8 @@ def totalchamasavings(request, chama_id):
 def totalchamaloans(request, chama_id):
     total_loans = 0
     chama = Chamas.objects.filter(chama_id=chama_id).first()
-    pending_loan = Loans.objects.filter(chama=chama, loan_status="pending", loan_type="LTL").first()
-    if not pending_loan:
-        return JsonResponse({"total_loans":0})
-    
-    approval = LoanApproval.objects.filter(loan_id=pending_loan).first()
-    if not approval:
-        total_loans = 0
-    
-    elif(approval.chairperson_approval == "approved" and approval.treasurer_approval == "approved" and approval.secretary_approval == "approved"):
-            # Loan summaries
-        total_ltl_loan = Loans.objects.filter(chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('amount'))['total'] or 0.00
-        total_loans = total_ltl_loan
-        
-    total_stl_loan = Loans.objects.filter(chama=chama, loan_status="pending", loan_type="STL").aggregate(Sum('amount'))['amount__sum'] or 0
-    total_loans += total_stl_loan
-    return JsonResponse({"total_loans":total_loans})
+    total_loan = Loans.objects.filter(chama=chama, loan_status="pending").aggregate(Sum('amount'))['amount__sum'] or 0
+    return JsonResponse({"total_loan":total_loan})
 # end of total loans savings
 
 #get chama api
@@ -374,9 +360,9 @@ def loans(request, member_id, chama_id, amount, loan_type):
         chama = Chamas.objects.get(chama_id=chama_id)
         member = Members.objects.filter(chama=chama,member_id=member_id).first()
         total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
-
+        total_loans = Loans.objects.filter(chama=chama, loan_status="pending").aggregate(Sum('amount'))['amount__sum'] or 0
         total_loans_repaid = LoanRepayment.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
-        net_savings = (total_savings - total_loans_repaid)
+        net_savings = (total_savings - total_loans) + total_loans_repaid
         if amount > net_savings:
             return Response({"message":"chama has insufficient funds","status":200})
         
