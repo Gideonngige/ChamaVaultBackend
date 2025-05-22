@@ -66,10 +66,10 @@ def index(request):
 
 #start of get members api
 @api_view(['GET','POST','DELETE'])
-def members(request, email, chama_id):
+def members(request, chama_id):
     if request.method == 'GET':
         try:
-            member = Members.objects.filter(chama=chama_id,email=email)
+            member = Members.objects.filter(chama=chama_id)
             if member:
                 members = Members.objects.filter(chama=chama_id)
                 serializer = MembersSerializer2(members, many=True)
