@@ -384,7 +384,7 @@ def loans(request, email, chama_id, amount, loan_type):
         months = period / 30
         repayment_amount = calc_repayment_amount(amount, months, loan_type)
         if loan_type == "LTL":
-            loan = Loans(name=member, chama=chama, amount=amount, repayment_amount=repayment_amount,amount_paid=0.00, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
+            loan = Loans(name=member, chama=chama, amount=amount, repayment_amount=repayment_amount, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
             loan.save()
             transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
             transaction.save()
@@ -399,7 +399,7 @@ def loans(request, email, chama_id, amount, loan_type):
             return Response({"message":f"Loan of Ksh.{amount} of type {loan_type} was successfully.","status":200})
 
         elif loan_type == "STL":
-            loan = Loans(name=member,chama=chama, amount=amount, repayment_amount=repayment_amount,amount_paid=0.00, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
+            loan = Loans(name=member,chama=chama, amount=amount, repayment_amount=repayment_amount, loan_status="pending", loan_type=loan_type, loan_deadline=loan_deadline)
             loan.save()
             transaction = Transactions(member=member, amount=amount, chama=chama, transaction_type="Loan")
             transaction.save()
