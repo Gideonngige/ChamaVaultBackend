@@ -203,7 +203,7 @@ def get_all_chamas(request):
 def contributions(request):
     try:
         data = json.loads(request.body) 
-        email = data.get('email')
+        member_id = data.get('member_id')
         amount = data.get('amount')
         phonenumber = data.get('phonenumber')
         chama_id = data.get('chama_id')
@@ -211,7 +211,7 @@ def contributions(request):
         savingType = data.get('savingType')
         print(chama_id)
 
-        member = Members.objects.filter(chama=chama_id, email=email).first()
+        member = Members.objects.filter(chama=chama_id, member=member_id).first()
         chama = Chamas.objects.get(chama_id=chama_id)
         print(chama)
 
