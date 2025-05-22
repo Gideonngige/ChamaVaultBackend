@@ -455,12 +455,12 @@ def getLoans(request, chama_id, email):
         if not stl_loan:
             stl_id = 0
         else:
-            stl_id = stl_loan.loan_id
+            stl_id = stl_loan.loan_id if stl_loan else 0
         
         if not ltl_loan:
             ltl_id = 0
         else:
-            ltl_id = stl_loan.loan_id
+            ltl_id = ltl_loan.loan_id if ltl_loan else 0
 
 
 
