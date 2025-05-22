@@ -368,11 +368,11 @@ def calc_repayment_amount(amount, months, loan_type):
 # africastalking.initialize(username='sandbox', api_key='atsk_35b2da862cc85124c522aec60fa8eedde173fc50f9fb9e0645ca97e6252f2c535930259b')
 # sms = africastalking.SMS
 @api_view(['GET'])
-def loans(request, email, chama_id, amount, loan_type):
+def loans(request, member_id, chama_id, amount, loan_type):
     try:
         print(chama_id)
         chama = Chamas.objects.get(chama_id=chama_id)
-        member = Members.objects.filter(chama=chama,email=email).first()
+        member = Members.objects.filter(chama=chama,member_id=member_id).first()
         total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
 
         total_loans_repaid = LoanRepayment.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
