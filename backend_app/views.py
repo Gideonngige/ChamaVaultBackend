@@ -211,7 +211,7 @@ def contributions(request):
         savingType = data.get('savingType')
         print(chama_id)
 
-        member = Members.objects.filter(chama=chama_id, member=member_id).first()
+        member = Members.objects.filter(chama=chama_id, member_id=member_id).first()
         chama = Chamas.objects.get(chama_id=chama_id)
         print(chama)
 
