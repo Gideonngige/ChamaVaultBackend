@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer, InvestmentProfitDetailSerializer, ContributorSerializer, LoanSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer, InvestmentProfitDetailSerializer, ContributorSerializer, LoanSerializer, ChamasSerializer
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -189,6 +189,12 @@ def allchamas(request):
         return JsonResponse({"error": str(e)}, status=500)
 #end of get allchama api
 
+# get chamas for admin
+@api_view(['GET'])
+def get_all_chamas(request):
+    chamas = Chamas.objects.all().order_by('-created_date')  # optional: newest first
+    serializer = ChamasSerializer(chamas, many=True)
+    return Response(serializer.data)
 
 
 #start of contributions api

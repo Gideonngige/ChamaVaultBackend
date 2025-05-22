@@ -100,3 +100,9 @@ class LoanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Loans
         fields = ['name', 'email','loan_status', 'loan_type', 'loan_date', 'amount']
+
+
+class ChamasSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chamas
+        fields = '__all__'
