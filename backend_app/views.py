@@ -287,10 +287,11 @@ def payloan(request):
         
         chama = Chamas.objects.get(chama_id=chama_id)
         member = Members.objects.filter(chama=chama,email=email).first()
+        loan = Loans.objects.get(loan_id=loan_id)
         
         print(chama)
         if member:
-            repayment = LoanRepayment(loan=loan_id, transactionRef=transactionRef, chama=chama, member=member, amount=amount,loan_type=loan_type)
+            repayment = LoanRepayment(loan=loan, transactionRef=transactionRef, chama=chama, member=member, amount=amount,loan_type=loan_type)
             repayment.save()
             transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Loan repayment")
             transaction.save()
