@@ -346,10 +346,9 @@ def loans(request, email, chama_id, amount, loan_type):
         chama = Chamas.objects.get(chama_id=chama_id)
         member = Members.objects.filter(chama=chama,email=email).first()
         total_savings = Contributions.objects.filter(chama=chama).aggregate(Sum('amount'))['amount__sum'] or 0
-        total_loans = Loans.objects.filter(chama=chama, loan_status="pending").aggregate(Sum('amount'))['amount__sum'] or 0
-        total_loans_repaid = Loans.objects.filter(chama=chama).aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
-        net_savings = (total_savings - total_loans) + total_loans_repaid
-        print(net_savings)
+
+        total_loans_repaid = Loans.objects.filter(chama=chama,loan_status="paid").aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0
+        net_savings = (total_savings - total_loans_repaid)
         if amount > net_savings:
             return Response({"message":"chama has insufficient funds","status":200})
 
@@ -425,33 +424,44 @@ def getLoans(request, chama_id, email):
 
         pending_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending").first()
         if not pending_loan:
-            return JsonResponse({"message": "No pending loan found"}, status=200)
+            return JsonResponse({"message": "No pending loan found"}, status=404)
 
         # Short Term Loan Summary
+        stl_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").first()
+        ltl_loan = Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="LTL").first()
+        if not stl_loan:
+            stl_id = 0
+        else:
+            stl_id = stl_loan.loan_id
+        
+        if not ltl_loan:
+            ltl_id = 0
+        else:
+            ltl_id = stl_loan.loan_id
+
+
+
         total_stl_loan = float(Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('amount'))['total'] or 0.00)
-        total_stl_repaid = float(Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('amount_paid'))['total'] or 0.00)
         total_stl_repayment = float(Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="STL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00)
-        stl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL",loan_status="pending").values('loan_date'))
-        stl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL", loan_status="pending").values('loan_deadline'))
-        total_stl_repayment -= total_stl_repaid
+        stl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_date'))
+        stl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="STL").values('loan_deadline'))
 
-        total_loan1 = total_stl_loan - total_stl_repaid
-
+        total_loan = total_stl_loan
 
         total_ltl_loan = float(Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('amount'))['total'] or 0.00)
-        total_ltl_repaid = float(Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('amount_paid'))['total'] or 0.00)
+       
         total_ltl_repayment = float(Loans.objects.filter(name=member, chama=chama, loan_status="pending", loan_type="LTL").aggregate(total=Sum('repayment_amount'))['total'] or 0.00)
-        ltl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL",loan_status="pending").values('loan_date'))
-        ltl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL", loan_status="pending").values('loan_deadline'))
-        
-        total_ltl_repayment -= total_ltl_repaid
-        total_loan2 = total_ltl_loan - total_ltl_repaid
-        total_loan = total_loan1 + total_loan2
+        ltl_loan_date = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL").values('loan_date'))
+        ltl_loan_deadline = list(Loans.objects.filter(name=member, chama=chama, loan_type="LTL").values('loan_deadline'))
+
+        total_loan += total_ltl_loan
 
         return JsonResponse({
             "total_loan": total_loan,
+            "stl_id":stl_id,
             "total_stl_loan": total_stl_loan,
             "total_ltl_loan": total_ltl_loan,
+            "ltl_id":ltl_id,
             "total_stl_repayment": total_stl_repayment,
             "total_ltl_repayment": total_ltl_repayment,
             "stl_loan_date": stl_loan_date,
@@ -459,7 +469,7 @@ def getLoans(request, chama_id, email):
             "ltl_loan_date": ltl_loan_date,
             "ltl_loan_deadline": ltl_loan_deadline,
         }, safe=False)
-
+     
 
     except Exception as e:
         return JsonResponse({"message": f"Server error: {str(e)}"}, status=500)
@@ -468,8 +478,6 @@ def getLoans(request, chama_id, email):
 #end of getLoans api 
 
 # get loan repayment for specific member
-from django.db.models import Sum
-from django.http import JsonResponse
 
 def getloanrepayment(request, chamaname, member_id):
     try:
@@ -479,40 +487,26 @@ def getloanrepayment(request, chamaname, member_id):
         if not member:
             return JsonResponse({"message": "Member not found"}, status=404)
 
-        # STL loans
-        stl_loans = Loans.objects.filter(name=member, chama=chama, loan_type="STL")
-        total_stl_loan = stl_loans.aggregate(total=Sum('amount'))['total'] or 0.00
-        total_stl_repaid = LoanRepayment.objects.filter(member=member, chama=chama, loan_type="STL").aggregate(total=Sum('amount'))['total'] or 0.00
-        remaining_stl_balance = max(float(total_stl_loan) - float(total_stl_repaid), 0.00)
+        # STL Loans (all pending)
+        stl_loans = Loans.objects.filter(name=member, chama=chama, loan_type="STL", loan_status="pending")
+        print(stl_loans)
+        total_stl_repaid = LoanRepayment.objects.filter(
+        loan__in=stl_loans,member=member, chama=chama, loan_type="STL"
+        ).aggregate(total=Sum('amount'))['total'] or 0.00
+        print(total_stl_repaid)
 
-        # Update STL loan statuses
-        for loan in stl_loans:
-            total_repaid_for_loan = LoanRepayment.objects.filter(loan=loan).aggregate(total=Sum('amount'))['total'] or 0.00
-            if total_repaid_for_loan >= loan.amount and loan.loan_status != "paid":
-                loan.loan_status = "paid"
-                loan.save()
-
-        # LTL loans
-        ltl_loans = Loans.objects.filter(name=member, chama=chama, loan_type="LTL")
-        total_ltl_loan = ltl_loans.aggregate(total=Sum('amount'))['total'] or 0.00
-        total_ltl_repaid = LoanRepayment.objects.filter(member=member, chama=chama, loan_type="LTL").aggregate(total=Sum('amount'))['total'] or 0.00
-        remaining_ltl_balance = max(float(total_ltl_loan) - float(total_ltl_repaid), 0.00)
-
-        # Update LTL loan statuses
-        for loan in ltl_loans:
-            total_repaid_for_loan = LoanRepayment.objects.filter(loan=loan).aggregate(total=Sum('amount'))['total'] or 0.00
-            if total_repaid_for_loan >= loan.amount and loan.loan_status != "paid":
-                loan.loan_status = "paid"
-                loan.save()
+        # LTL Loans (all pending)
+        ltl_loans = Loans.objects.filter(name=member, chama=chama, loan_type="LTL", loan_status="pending")
+        total_ltl_repaid = LoanRepayment.objects.filter(
+            loan__in=ltl_loans, member=member, chama=chama, loan_type="LTL"
+        ).aggregate(total=Sum('amount'))['total'] or 0.00
 
         return JsonResponse({
             "STL": {
                 "repaid_amount": float(total_stl_repaid),
-                "remaining_balance": remaining_stl_balance
             },
             "LTL": {
                 "repaid_amount": float(total_ltl_repaid),
-                "remaining_balance": remaining_ltl_balance
             }
         }, status=200)
 
@@ -520,6 +514,7 @@ def getloanrepayment(request, chamaname, member_id):
         return JsonResponse({"message": "Chama not found"}, status=404)
     except Exception as e:
         return JsonResponse({"message": f"Server error: {str(e)}"}, status=500)
+
 
 
 # end of get loan repayment for specific member

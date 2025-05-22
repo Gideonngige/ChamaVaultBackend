@@ -102,7 +102,6 @@ class Loans(models.Model):
     chama = models.ForeignKey(Chamas, on_delete=models.CASCADE, default=1)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     repayment_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     LOAN_TYPES = [
         ('LTL', 'Long Term Loan'),
         ('STL', 'Short Term Loan'),
