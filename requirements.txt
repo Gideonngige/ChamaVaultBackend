@@ -19,4 +19,4 @@ africastalking==1.2.9
 cloudinary==1.37.0
 requests==2.31.0
 python-decouple==3.8
-
+whitenoise>=6.0
