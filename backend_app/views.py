@@ -209,43 +209,24 @@ def contributions(request):
         chama = Chamas.objects.get(chama_id=chama_id)
         print(chama)
 
-        contribution_date_obj = ContributionDate.objects.filter(chama=chama).order_by('-contribution_date').first()
-        if not contribution_date_obj:
-            return JsonResponse({"message": "No contribution date found"}, status=404)
-
-        contribution_date = contribution_date_obj.contribution_date.date()
-        today = date.today()
-
-
         if member:
-            if today > contribution_date:
-                contribution = Contributions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, contribution_type=savingType)
-                contribution.save()
-                transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Contribution")
-                transaction.save()
-
-                # If today is past the contribution date, apply a penalty of 10% of the amount
-                penalty_amount = amount * 0.1
-                penalty = Penalty(contribution=contribution, amount=penalty_amount, penalty_date=contribution_date_obj)
-                penalty.save()
-                print("Penalty applied:", penalty_amount)
-
-                Notifications.objects.create(
-                    member_id=member,
-                    chama=chama,
-                    notification_type="alert",
-                    notification=f"Your contribution of KES.{amount} was late. A penalty of KES.{penalty_amount} has been applied."
-                )
+    
+            contribution = Contributions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, contribution_type=savingType)
+            contribution.save()
+            transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Contribution")
+            transaction.save()
 
 
-                return JsonResponse({"message":f"Contribution of Ksh.{amount} to chama{chama_id} was successful","status":200})
+            Notifications.objects.create(
+                member_id=member,
+                chama=chama,
+                notification_type="alert",
+                notification=f"Your contribution of KES.{amount} for {savingType} was successfully."
+            )
+
+            return JsonResponse({"message":f"Contribution of Ksh.{amount} to chama{chama_id} was successful","status":200})
             
-            else:
-                contribution = Contributions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, contribution_type=savingType)
-                contribution.save()
-                transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Contribution")
-                transaction.save()
-                return JsonResponse({"message":f"Contribution of Ksh.{amount} to chama{chama_id} was successful","status":200})
+            
         else:
             return JsonResponse({"message":"Please signin"})
 
