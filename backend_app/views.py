@@ -281,7 +281,7 @@ def payloan(request):
         phonenumber = data.get('phonenumber')
         chama_id = data.get('chama_id')
         transactionRef = data.get('transactionRef')
-        loan_id = data.get("loan_id")
+        loan_id = data.get("loanId")
         print(chama_id)
         print(loan_id)
         
