@@ -299,7 +299,7 @@ def payloan(request):
             print(f"Total repaid so far: {total_repaid}, Loan amount: {loan.amount}")
 
             # If total repayments equal or exceed loan amount, mark as paid
-            if total_repaid >= loan.amount:
+            if float(total_repaid) >= float(loan.repayment_amount):
                 loan.loan_status = 'paid'  # Make sure your model uses 'paid' as the correct status
                 loan.save()
 
