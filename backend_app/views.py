@@ -281,6 +281,7 @@ def payloan(request):
         phonenumber = data.get('phonenumber')
         chama_id = data.get('chama_id')
         transactionRef = data.get('transactionRef')
+        loan_id = data.get("loan_id")
         print(chama_id)
         
         chama = Chamas.objects.get(chama_id=chama_id)
@@ -288,7 +289,7 @@ def payloan(request):
         
         print(chama)
         if member:
-            repayment = LoanRepayment(transactionRef=transactionRef, chama=chama, member=member, amount=amount,loan_type=loan_type)
+            repayment = LoanRepayment(loan=loan_id, transactionRef=transactionRef, chama=chama, member=member, amount=amount,loan_type=loan_type)
             repayment.save()
             transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Loan repayment")
             transaction.save()
