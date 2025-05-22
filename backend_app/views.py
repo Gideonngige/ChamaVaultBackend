@@ -276,31 +276,68 @@ def payloan(request):
     try:
         data = json.loads(request.body) 
         email = data.get('email')
-        amount = data.get('amount')
+        amount = float(data.get('amount'))  # Ensure amount is float
         loan_type = data.get('loan_type')
         phonenumber = data.get('phonenumber')
         chama_id = data.get('chama_id')
         transactionRef = data.get('transactionRef')
         loan_id = data.get("loanId")
-        print(chama_id)
-        print(loan_id)
+
+        print(f"Chama ID: {chama_id}")
+        print(f"Loan ID: {loan_id}")
         
         chama = Chamas.objects.get(chama_id=chama_id)
-        member = Members.objects.filter(chama=chama,email=email).first()
+        member = Members.objects.filter(chama=chama, email=email).first()
         loan = Loans.objects.get(loan_id=loan_id)
-        
-        print(chama)
-        if member:
-            repayment = LoanRepayment(loan=loan, transactionRef=transactionRef, chama=chama, member=member, amount=amount,loan_type=loan_type)
-            repayment.save()
-            transaction = Transactions(transactionRef=transactionRef, member=member, amount=amount, chama=chama, transaction_type="Loan repayment")
-            transaction.save()
-            return JsonResponse({"message":f"Loan repayment of Ksh.{amount} to chama{chama_id} was successful","status":200})
-        else:
-            return JsonResponse({"message":"Please signin"})
 
+        if member:
+            # Save the new repayment
+            repayment = LoanRepayment(
+                loan=loan,
+                transactionRef=transactionRef,
+                chama=chama,
+                member=member,
+                amount=amount,
+                loan_type=loan_type
+            )
+            repayment.save()
+
+            # Save transaction
+            transaction = Transactions(
+                transactionRef=transactionRef,
+                member=member,
+                amount=amount,
+                chama=chama,
+                transaction_type="Loan repayment"
+            )
+            transaction.save()
+
+            # Calculate total repayments for the loan
+            total_repaid = LoanRepayment.objects.filter(loan=loan).aggregate(total=models.Sum('amount'))['total'] or 0.0
+
+            print(f"Total repaid so far: {total_repaid}, Loan amount: {loan.amount}")
+
+            # If total repayments equal or exceed loan amount, mark as paid
+            if total_repaid >= loan.amount:
+                loan.loan_status = 'paid'  # Make sure your model uses 'paid' as the correct status
+                loan.save()
+
+            return JsonResponse({
+                "message": f"Loan repayment of Ksh.{amount} to chama {chama_id} was successful",
+                "status": 200
+            })
+        else:
+            return JsonResponse({"message": "Please sign in"}, status=401)
+
+    except Chamas.DoesNotExist:
+        return JsonResponse({"message": "Chama not found"}, status=404)
+    except Loans.DoesNotExist:
+        return JsonResponse({"message": "Loan not found"}, status=404)
     except Members.DoesNotExist:
-        return Response({"message":"Invalid email address"})
+        return JsonResponse({"message": "Member not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"message": f"Internal server error: {str(e)}"}, status=500)
+
 
 #end of payloan api
 
