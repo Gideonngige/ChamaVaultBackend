@@ -31,6 +31,9 @@ from django.db.models import Q
 import cloudinary.uploader
 from . creditscore import calculate_credit_score
 from decouple import config
+import traceback
+from django.db import models
+
 # import backend_app.firebase_admin_init
 # from firebase_admin import auth as firebase_auth
 # import pyrebase4 as pyrebase
@@ -286,7 +289,7 @@ def payloan(request):
             transaction.save()
 
             # Calculate total repayments for the loan
-            total_repaid = LoanRepayment.objects.filter(loan=loan).aggregate(total=models.Sum('amount'))['total'] or 0.0
+            total_repaid = LoanRepayment.objects.filter(loan=loan).aggregate(total=Sum('amount'))['total'] or 0.0
 
             print(f"Total repaid so far: {total_repaid}, Loan amount: {loan.repayment_amount}")
 
@@ -309,7 +312,12 @@ def payloan(request):
     except Members.DoesNotExist:
         return JsonResponse({"message": "Member not found"}, status=404)
     except Exception as e:
-        return JsonResponse({"message": f"Internal server error: {str(e)}"}, status=500)
+        print("An unexpected error occurred:")
+        traceback.print_exc()  # This shows the exact line and cause
+        return JsonResponse({
+        "message": f"Internal server error: {str(e)}",
+        "traceback": traceback.format_exc()
+         }, status=500)
 
 
 #end of payloan api
