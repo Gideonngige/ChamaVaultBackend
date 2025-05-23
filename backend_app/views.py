@@ -288,10 +288,10 @@ def payloan(request):
             # Calculate total repayments for the loan
             total_repaid = LoanRepayment.objects.filter(loan=loan).aggregate(total=models.Sum('amount'))['total'] or 0.0
 
-            print(f"Total repaid so far: {total_repaid}, Loan amount: {loan.amount}")
+            print(f"Total repaid so far: {total_repaid}, Loan amount: {loan.repayment_amount}")
 
             # If total repayments equal or exceed loan amount, mark as paid
-            if float(total_repaid) >= float(loan.repayment_amount):
+            if round(total_repaid,2) >= round(loan.repayment_amount,2):
                 loan.loan_status = 'paid'  # Make sure your model uses 'paid' as the correct status
                 loan.save()
 
