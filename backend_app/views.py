@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 # from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
-from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer, InvestmentProfitDetailSerializer, ContributorSerializer, LoanSerializer, ChamasSerializer
+from .serializers import MembersSerializer, ChamasSerializer, LoansSerializer, NotificationsSerializer, TransactionsSerializer, AllChamasSerializer, ContributionsSerializer, MessageSerializer, MembersSerializer2, MemberLocationSerializer, DefaultersSerializer, InvestmentSerializer, MemberInvestmentSummarySerializer, InvestmentProfitDetailSerializer, ContributorSerializer, LoanSerializer, ChamasSerializer, AllMembersSerializer
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -98,7 +98,7 @@ def getMember(request, email, chama):
             member = Members.objects.filter(chama=chama_obj, email=email).first()
 
         serializer = MembersSerializer(member)
-        return JsonResponse(serializer.data, safe=False)
+        return Response(serializer.data)
 
     except Members.DoesNotExist:
         return JsonResponse({"message": "Member with this email does not exist."}, status=404)
@@ -184,6 +184,12 @@ def get_all_chamas(request):
     serializer = ChamasSerializer(chamas, many=True)
     return Response(serializer.data)
 
+
+@api_view(['GET'])
+def get_all_members(request):
+    members = Members.objects.all().order_by('-joined_date')  # optional: newest first
+    serializer = AllMembersSerializer(members, many=True)
+    return Response(serializer.data)
 
 #start of contributions api
 # @csrf_exempt
@@ -959,3 +965,12 @@ def get_total_insurance(request, member_id, chama_id):
     
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+# def member_chamas(request, member_id):
+#     try:
+#         member = Members.objects.get(email=email)
+
+#     except Members.DoesNotExist:
+#         return JsonResponse({"message": "Member not found"}, status=404)
+#     except Exception as e:
+#         return JsonResponse({"error": str(e)}, status=500)

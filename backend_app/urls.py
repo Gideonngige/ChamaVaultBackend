@@ -32,4 +32,5 @@ urlpatterns = [
     path('insurance/', views.insurance, name='insurance'),
     path('get_total_insurance/<int:member_id>/<int:chama_id>/', views.get_total_insurance, name='get_total_insurance'),
     path('get_all_chamas/', views.get_all_chamas, name='get_all_chamas'),
+    path('get_all_members/', views.get_all_members, name='get_all_members'),
 ]
