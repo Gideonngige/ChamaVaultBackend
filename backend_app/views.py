@@ -684,6 +684,7 @@ def postsignUp(request):
         name = request.data.get("name")
         phone_number = request.data.get("phone_number")
         password = request.data.get("password")
+        id_number = request.data.get("id_number")
         # profile_image = request.FILES.get("profile_image")
 
         # Check if email already exists
@@ -706,6 +707,7 @@ def postsignUp(request):
             name=name,
             email=email,
             phone_number=phone_number,
+            id_number=id_number,
             password=uid,
             role="member",
             # profile_image=image_url  # Ensure your model has this field
@@ -789,6 +791,7 @@ def joinchama(request, member_id, chama_name):
             name=member.name,
             email=member.email,
             phone_number=member.phone_number,
+            id_number=member.id_number,
             password=member.password,
             role="member",
             profile_image = member.profile_image
