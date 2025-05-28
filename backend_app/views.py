@@ -684,17 +684,17 @@ def postsignUp(request):
         name = request.data.get("name")
         phone_number = request.data.get("phone_number")
         password = request.data.get("password")
-        profile_image = request.FILES.get("profile_image")
+        # profile_image = request.FILES.get("profile_image")
 
         # Check if email already exists
         if Members.objects.filter(email=email).exists():
             return JsonResponse({"message": "An account with this email already exists"}, status=400)
 
         # Upload image to Cloudinary if provided
-        image_url = None
-        if profile_image:
-            upload_result = cloudinary.uploader.upload(profile_image)
-            image_url = upload_result.get("secure_url")
+        # image_url = None
+        # if profile_image:
+        #     upload_result = cloudinary.uploader.upload(profile_image)
+        #     image_url = upload_result.get("secure_url")
 
         # Create Firebase user
         user = authe.create_user_with_email_and_password(email, password)
@@ -708,7 +708,7 @@ def postsignUp(request):
             phone_number=phone_number,
             password=uid,
             role="member",
-            profile_image=image_url  # Ensure your model has this field
+            # profile_image=image_url  # Ensure your model has this field
         )
         member.save()
 
