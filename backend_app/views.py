@@ -199,7 +199,7 @@ def get_member_chamas(request, email):
         return JsonResponse({"chamas": chamas}, safe=False)
 
     except Exception as e:
-        return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
+        return JsonResponse({"message": f"Error: {str(e)}"}, status=201)
 
 #end of get chama api
 
