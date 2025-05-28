@@ -184,6 +184,25 @@ def get_all_chamas(request):
     serializer = ChamasSerializer(chamas, many=True)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def get_member_chamas(request, email):
+    try:
+        # Get all Members associated with the given email
+        members = Members.objects.filter(email=email)
+
+        if not members.exists():
+            return JsonResponse({"message": "No chamas found for this email"}, status=404)
+
+        # Extract chama names instead of objects
+        chamas = [member.chama.name for member in members]  # Extract only the name
+
+        return JsonResponse({"chamas": chamas}, safe=False)
+
+    except Exception as e:
+        return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
+
+#end of get chama api
+
 
 @api_view(['GET'])
 def get_all_members(request):
